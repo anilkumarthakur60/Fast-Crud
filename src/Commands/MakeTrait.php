@@ -8,8 +8,11 @@ use Illuminate\Contracts\Filesystem\FileNotFoundException;
 class MakeTrait extends GeneratorCommand
 {
     const STUB_PATH = __DIR__.'/../../stubs/';
+
     protected $signature = 'make:trait {name : Create a php trait}';
+
     protected $description = 'Create a new Create a php trait';
+
     protected $type = 'Trait';
 
     public function handle(): bool
@@ -21,7 +24,7 @@ class MakeTrait extends GeneratorCommand
         }
         $name = $this->qualifyClass($this->getNameInput());
         $path = $this->getPath($name);
-        if (!$this->hasOption('force') && $this->alreadyExists($this->getNameInput())) {
+        if (! $this->hasOption('force') && $this->alreadyExists($this->getNameInput())) {
             $this->error($this->type.' already exists!');
 
             return false;

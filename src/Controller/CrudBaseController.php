@@ -19,6 +19,7 @@ class CrudBaseController extends BaseController
 {
     use AuthorizesRequests;
     use ValidatesRequests;
+
     public array $scopes = [];
 
     public array $scopeWithValue = [];
@@ -61,14 +62,14 @@ class CrudBaseController extends BaseController
 
     public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource)
     {
-        if (!(new $this->model() instanceof Model)) {
+        if (! (new $this->model instanceof Model)) {
             throw new Exception('Model is not instance of Model', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-        if (!(new $this->storeRequest() instanceof FormRequest)) {
+        if (! (new $this->storeRequest instanceof FormRequest)) {
             throw new Exception('StoreRequest is not instance of form request', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        if (!(new $this->updateRequest() instanceof FormRequest)) {
+        if (! (new $this->updateRequest instanceof FormRequest)) {
             throw new Exception('UpdateRequest is not instance of FormRequest', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -119,12 +120,12 @@ class CrudBaseController extends BaseController
 
     public function store()
     {
-        $data = resolve($this->storeRequest)->safe()->only((new $this->model())->getFillable());
+        $data = resolve($this->storeRequest)->safe()->only((new $this->model)->getFillable());
 
         try {
             DB::beginTransaction();
             $model = $this->model::create($data);
-            if (method_exists(new $this->model(), 'afterCreateProcess')) {
+            if (method_exists(new $this->model, 'afterCreateProcess')) {
                 $model->afterCreateProcess();
             }
 
@@ -145,7 +146,7 @@ class CrudBaseController extends BaseController
     ) {
         return response()->json([
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ], $code);
     }
 
@@ -192,12 +193,12 @@ class CrudBaseController extends BaseController
                 }
             })
             ->findOrFail($id);
-        if (method_exists(new $this->model(), 'beforeDeleteProcess')) {
+        if (method_exists(new $this->model, 'beforeDeleteProcess')) {
             $model->beforeDeleteProcess();
         }
 
         $this->forceDelete === true ? $model->forceDelete() : $model->delete();
-        if (method_exists(new $this->model(), 'afterDeleteProcess')) {
+        if (method_exists(new $this->model, 'afterDeleteProcess')) {
             $model->afterDeleteProcess();
         }
 
@@ -207,8 +208,8 @@ class CrudBaseController extends BaseController
     public function delete()
     {
         request()->validate([
-            'delete_rows'   => ['required', 'array'],
-            'delete_rows.*' => ['required', 'exists:'.(new $this->model())->getTable().',id'],
+            'delete_rows' => ['required', 'array'],
+            'delete_rows.*' => ['required', 'exists:'.(new $this->model)->getTable().',id'],
         ]);
 
         try {
@@ -227,15 +228,15 @@ class CrudBaseController extends BaseController
                     })
                     ->find($item);
 
-                if (!$model) {
+                if (! $model) {
                     continue;
                 }
 
-                if (method_exists(new $this->model(), 'beforeDeleteProcess')) {
+                if (method_exists(new $this->model, 'beforeDeleteProcess')) {
                     $model->beforeDeleteProcess();
                 }
                 $this->forceDelete === true ? $model->forceDelete() : $model->delete();
-                if (method_exists(new $this->model(), 'afterDeleteProcess')) {
+                if (method_exists(new $this->model, 'afterDeleteProcess')) {
                     $model->afterDeleteProcess();
                 }
             }
@@ -257,7 +258,7 @@ class CrudBaseController extends BaseController
     ): JsonResponse {
         return response()->json([
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ], $code);
     }
 
@@ -278,10 +279,10 @@ class CrudBaseController extends BaseController
 
         try {
             DB::beginTransaction();
-            if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
+            if (method_exists(new $this->model, 'beforeChangeStatusProcess')) {
                 $model->beforeChangeStatusProcess();
             }
-            if (!$this->checkFillable($model, [$column])) {
+            if (! $this->checkFillable($model, [$column])) {
                 DB::rollBack();
 
                 throw new Exception("$column column not found in fillable");
@@ -308,7 +309,7 @@ class CrudBaseController extends BaseController
 
     public function update($id)
     {
-        $data = resolve($this->updateRequest)->safe()->only((new $this->model())->getFillable());
+        $data = resolve($this->updateRequest)->safe()->only((new $this->model)->getFillable());
 
         $model = $this->model::initializer()
             ->when(property_exists($this, 'updateScopes') && count($this->updateScopes), function ($query) {
@@ -325,11 +326,11 @@ class CrudBaseController extends BaseController
 
         try {
             DB::beginTransaction();
-            if (method_exists(new $this->model(), 'beforeUpdateProcess')) {
+            if (method_exists(new $this->model, 'beforeUpdateProcess')) {
                 $model->beforeUpdateProcess();
             }
             $model->update($data);
-            if (method_exists(new $this->model(), 'afterUpdateProcess')) {
+            if (method_exists(new $this->model, 'afterUpdateProcess')) {
                 $model->afterUpdateProcess();
             }
 
@@ -370,16 +371,16 @@ class CrudBaseController extends BaseController
 
         try {
             DB::beginTransaction();
-            if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
+            if (method_exists(new $this->model, 'beforeChangeStatusProcess')) {
                 $model->beforeChangeStatusProcess();
             }
-            if (!$this->checkFillable($model, ['status'])) {
+            if (! $this->checkFillable($model, ['status'])) {
                 DB::rollBack();
 
                 throw new Exception('Status column not found in fillable');
             }
             $model->update(['status' => $model->status === 1 ? 0 : 1]);
-            if (method_exists(new $this->model(), 'afterChangeStatusProcess')) {
+            if (method_exists(new $this->model, 'afterChangeStatusProcess')) {
                 $model->afterChangeStatusProcess();
             }
             DB::commit();
@@ -410,13 +411,13 @@ class CrudBaseController extends BaseController
         try {
             DB::beginTransaction();
 
-            if (method_exists(new $this->model(), 'beforeRestoreProcess')) {
+            if (method_exists(new $this->model, 'beforeRestoreProcess')) {
                 $model->beforeRestoreProcess();
             }
 
             $model->restore();
 
-            if (method_exists(new $this->model(), 'afterRestoreProcess')) {
+            if (method_exists(new $this->model, 'afterRestoreProcess')) {
                 $model->afterRestoreProcess();
             }
 
@@ -454,13 +455,13 @@ class CrudBaseController extends BaseController
         try {
             DB::beginTransaction();
 
-            if (method_exists(new $this->model(), 'beforeForceDeleteProcess')) {
+            if (method_exists(new $this->model, 'beforeForceDeleteProcess')) {
                 $model->beforeForceDeleteProcess();
             }
 
             $model->forceDelete();
 
-            if (method_exists(new $this->model(), 'afterForceDeleteProcess')) {
+            if (method_exists(new $this->model, 'afterForceDeleteProcess')) {
                 $model->afterForceDeleteProcess();
             }
 

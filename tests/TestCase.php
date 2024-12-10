@@ -112,9 +112,7 @@ abstract class TestCase extends OrchestraTestCase
     /**
      * Define routes setup.
      *
-     * @param Router $router
-     *
-     * @return void
+     * @param  Router  $router
      */
     protected function defineRoutes($router): void
     {

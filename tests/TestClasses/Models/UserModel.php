@@ -2,6 +2,7 @@
 
 namespace Anil\FastApiCrud\Tests\TestClasses\Models;
 
+use Anil\FastApiCrud\Database\Factories\UserModelFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,7 +10,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserModel extends Model
 {
+    /** @use HasFactory<UserModelFactory> */
     use HasFactory;
+
     use SoftDeletes;
 
     protected $table = 'users';
@@ -22,8 +25,14 @@ class UserModel extends Model
         'active',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return HasMany<PostModel,UserModel>
+     */
     public function posts(): HasMany
     {
+        /** @var HasMany<PostModel,UserModel> */
         return $this->hasMany(
             related: PostModel::class,
             foreignKey: 'user_id',

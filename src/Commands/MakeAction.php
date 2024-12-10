@@ -8,8 +8,11 @@ use Illuminate\Contracts\Filesystem\FileNotFoundException;
 class MakeAction extends GeneratorCommand
 {
     const STUB_PATH = __DIR__.'/../../stubs/';
+
     protected $signature = 'make:action {name : Create an action class}';
+
     protected $description = 'Create a new action class';
+
     protected $type = 'Action';
 
     public function handle(): bool
@@ -21,7 +24,7 @@ class MakeAction extends GeneratorCommand
         }
         $name = $this->qualifyClass($this->getNameInput());
         $path = $this->getPath($name);
-        if (!$this->hasOption('force') && $this->alreadyExists($this->getNameInput())) {
+        if (! $this->hasOption('force') && $this->alreadyExists($this->getNameInput())) {
             $this->error($this->type.' already exists!');
 
             return false;

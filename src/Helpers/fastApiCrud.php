@@ -3,7 +3,7 @@
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 
-if (!function_exists('_dd')) {
+if (! function_exists('_dd')) {
     function _dd(...$args)
     {
         header('Access-Control-Allow-Origin: *');
@@ -12,17 +12,17 @@ if (!function_exists('_dd')) {
         http_response_code(500);
 
         foreach ($args as $x) {
-            (new Symfony\Component\VarDumper\VarDumper())->dump($x);
+            (new Symfony\Component\VarDumper\VarDumper)->dump($x);
         }
 
         exit(1);
     }
 }
 
-if (!function_exists('shortName')) {
+if (! function_exists('shortName')) {
     function shortName($param)
     {
-        if (!app($param)) {
+        if (! app($param)) {
             return null;
         }
         $reflection = new ReflectionClass(app($param));
@@ -31,7 +31,7 @@ if (!function_exists('shortName')) {
     }
 }
 
-if (!function_exists('totalSeconds')) {
+if (! function_exists('totalSeconds')) {
     function totalSeconds($times): mixed
     {
         $time = explode(':', $times);
@@ -50,7 +50,7 @@ if (!function_exists('totalSeconds')) {
         return $seconds;
     }
 }
-if (!function_exists('duration')) {
+if (! function_exists('duration')) {
     function duration($duration): string
     {
         $interval = CarbonInterval::seconds($duration)->cascade();
@@ -61,7 +61,7 @@ if (!function_exists('duration')) {
     }
 }
 
-if (!function_exists('dateForHumans')) {
+if (! function_exists('dateForHumans')) {
     function dateForHumans($date): ?string
     {
         if ($date) {
@@ -72,7 +72,7 @@ if (!function_exists('dateForHumans')) {
     }
 }
 
-if (!function_exists('ymdDate')) {
+if (! function_exists('ymdDate')) {
     function ymdDate($date, $format = 'Y-m-d'): ?string
     {
         if ($date) {
@@ -83,7 +83,7 @@ if (!function_exists('ymdDate')) {
     }
 }
 
-if (!function_exists('dateForReports')) {
+if (! function_exists('dateForReports')) {
     function dateForReports($date, $format = 'Y-m-d H:i'): ?string
     {
         try {
@@ -93,7 +93,7 @@ if (!function_exists('dateForReports')) {
         }
     }
 }
-if (!function_exists('getFilterByKey')) {
+if (! function_exists('getFilterByKey')) {
     function getFilterByKey($key = 'date'): ?string
     {
         $jsonData = json_decode(request()->query('filters'));
@@ -102,7 +102,7 @@ if (!function_exists('getFilterByKey')) {
         return $value ?? null;
     }
 }
-if (!function_exists('getArrayFilterByKey')) {
+if (! function_exists('getArrayFilterByKey')) {
     function getArrayFilterByKey($key = 'date'): ?array
     {
         $jsonData = json_decode(request()->query('filters'));
@@ -112,27 +112,27 @@ if (!function_exists('getArrayFilterByKey')) {
     }
 }
 
-if (!function_exists('flatData')) {
+if (! function_exists('flatData')) {
     function flatData($data, $depth = 0): array
     {
         return collect($data)->flatten($depth)->toArray();
     }
 }
 
-if (!function_exists('defaultOrder')) {
+if (! function_exists('defaultOrder')) {
     function defaultOrder(): string
     {
         return (bool) request()->query('descending') === true ? 'ASC' : 'DESC';
     }
 }
-if (!function_exists('defaultSort')) {
+if (! function_exists('defaultSort')) {
     function defaultSort($key = 'id'): string
     {
         return request()->query('sortBy', $key);
     }
 }
 
-if (!function_exists('getClassMethod')) {
+if (! function_exists('getClassMethod')) {
     function getClassMethod($class)
     {
         $class = new ReflectionClass($class);
@@ -148,11 +148,11 @@ if (!function_exists('getClassMethod')) {
     }
 }
 
-if (!function_exists('getColumns')) {
+if (! function_exists('getColumns')) {
     function getColumns($table = 'users'): array
     {
         if (is_subclass_of($table, 'Illuminate\Database\Eloquent\Model')) {
-            $model = new $table();
+            $model = new $table;
 
             $columns = $model->getConnection()->getSchemaBuilder()->getColumnListing($model->getTable());
         } else {

@@ -13,11 +13,11 @@ class PostModelFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'    => $this->faker->name,
-            'desc'    => $this->faker->text,
+            'name' => $this->faker->name,
+            'desc' => $this->faker->text,
             'user_id' => UserModel::factory(),
-            'status'  => $this->faker->boolean,
-            'active'  => $this->faker->boolean,
+            'status' => $this->faker->boolean,
+            'active' => $this->faker->boolean,
         ];
     }
 }
