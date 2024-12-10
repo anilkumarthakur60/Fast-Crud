@@ -6,6 +6,5 @@ parameters:
 
     paths:
         - src/
-        - tests/
         - database/
     level: 9

@@ -18,7 +18,7 @@ class ApiCrudServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
+            __DIR__ . '/../../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
         ], 'config');
 
         Builder::macro('likeWhere', function (array $attributes, ?string $searchTerm = null) {
@@ -225,7 +225,7 @@ class ApiCrudServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/fastApiCrud.php', 'fastApiCrud');
+        $this->mergeConfigFrom(__DIR__ . '/../../config/fastApiCrud.php', 'fastApiCrud');
         $this->commands([MakeAction::class, MakeService::class, MakeTrait::class]);
     }
 }
