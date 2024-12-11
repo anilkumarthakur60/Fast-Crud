@@ -3,10 +3,16 @@
 namespace Anil\FastApiCrud\Exceptions;
 
 use Exception;
+use Illuminate\Http\JsonResponse;
 
 class ApiCrudException extends Exception
 {
-    public function render($request)
+    /**
+     * Render the exception.
+     *
+     * @return JsonResponse
+     */
+    public function render(): JsonResponse
     {
         return response()->json([
             'error' => [

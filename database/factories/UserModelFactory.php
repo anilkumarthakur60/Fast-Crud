@@ -5,6 +5,10 @@ namespace Anil\FastApiCrud\Database\Factories;
 use Anil\FastApiCrud\Tests\TestClasses\Models\UserModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+
+/**
+ * @extends Factory<UserModel>
+ */
 class UserModelFactory extends Factory
 {
     protected $model = UserModel::class;

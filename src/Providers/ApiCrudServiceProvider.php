@@ -2,11 +2,9 @@
 
 namespace Anil\FastApiCrud\Providers;
 
-use Anil\FastApiCrud\Commands\MakeAction;
-use Anil\FastApiCrud\Commands\MakeService;
-use Anil\FastApiCrud\Commands\MakeTrait;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
@@ -44,42 +42,43 @@ class ApiCrudServiceProvider extends ServiceProvider
             });
         });
 
-        Builder::macro('equalWhere', function (array $attributes, mixed $searchTerm = null) {
-            if (is_array($searchTerm) && count($searchTerm) === 0) {
-                return $this;
-            }
-            if (! is_array($searchTerm) && ! isset($searchTerm)) {
-                return $this;
-            }
-
-            return $this->where(function (Builder $query) use ($attributes, $searchTerm) {
-                foreach ($attributes as $attribute) {
-                    $query->when(
-                        Str::contains($attribute, '.'),
-                        function (Builder $query) use ($attribute, $searchTerm) {
-                            $relationName = Str::beforeLast($attribute, '.');
-                            $relationAttribute = Str::afterLast($attribute, '.');
-                            $relation = $this->getRelationWithoutConstraints($relationName);
-                            $table = $relation->getModel()->getTable();
-                            $query->whereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm, $table) {
-                                if (is_array($searchTerm)) {
-                                    $query->whereIn($table.'.'.$relationAttribute, $searchTerm);
-                                } else {
-                                    $query->where($table.'.'.$relationAttribute, $searchTerm);
-                                }
-                            });
-                        },
-                        function (Builder $query) use ($attribute, $searchTerm) {
-                            if (is_array($searchTerm)) {
-                                $query->whereIn($attribute, $searchTerm);
-                            } else {
-                                $query->where($attribute, $searchTerm);
-                            }
-                        }
-                    );
-                }
-            });
-        });
+        /* eslint-disable */
+//        Builder::macro('equalWhere', function (array $attributes, mixed $searchTerm = null) {
+//            if (is_array($searchTerm) && count($searchTerm) === 0) {
+//                return $this;
+//            }
+//            if (! is_array($searchTerm) && ! isset($searchTerm)) {
+//                return $this;
+//            }
+//            return $this->where(function (Builder $query) use ($attributes, $searchTerm) {
+//                foreach ($attributes as $attribute) {
+//                    $query->when(
+//                        Str::contains($attribute, '.'),
+//                        function (Builder $query) use ($attribute, $searchTerm) {
+//                            $relationName = Str::beforeLast($attribute, '.');
+//                            $relationAttribute = Str::afterLast($attribute, '.');
+//                            $relation = $this->getRelationWithoutConstraints($relationName);
+//                            $table = $relation->getModel()->getTable();
+//                            $query->whereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm, $table) {
+//                                if (is_array($searchTerm)) {
+//                                    $query->whereIn($table.'.'.$relationAttribute, $searchTerm);
+//                                } else {
+//                                    $query->where($table.'.'.$relationAttribute, $searchTerm);
+//                                }
+//                            });
+//                        },
+//                        function (Builder $query) use ($attribute, $searchTerm) {
+//                            if (is_array($searchTerm)) {
+//                                $query->whereIn($attribute, $searchTerm);
+//                            } else {
+//                                $query->where($attribute, $searchTerm);
+//                            }
+//                        }
+//                    );
+//                }
+//            });
+//        });
+        /* eslint-disable */
 
         Builder::macro('paginates', function ($perPage = null, $columns = ['*'], $pageName = 'page', ?int $page = null) {
             request()->validate([config('fastApiCrud.rowsPerPageRules')]);
@@ -111,6 +110,8 @@ class ApiCrudServiceProvider extends ServiceProvider
                 'pageName' => $pageName,
             ]);
         });
+        /* eslint-disable */
+
         Builder::macro('simplePaginates', function (?int $perPage = null, $columns = ['*'], $pageName = 'page', $page = null) {
             request()->validate(['rowsPerPage' => 'nullable|numeric|gte:0|lte:10000']);
             if (request()->filled('rowsPerPage')) {
@@ -129,6 +130,7 @@ class ApiCrudServiceProvider extends ServiceProvider
                 'pageName' => $pageName,
             ]);
         });
+        /* eslint-enable */
 
         Builder::macro('toRawSql', function (): string {
             $bindings = [];
@@ -164,6 +166,7 @@ class ApiCrudServiceProvider extends ServiceProvider
             );
         });
 
+        /* eslint-disable */
         Builder::macro('initializer', function (bool $orderBy = true) {
             $request = request();
             $filters = [];
@@ -193,6 +196,7 @@ class ApiCrudServiceProvider extends ServiceProvider
 
             return $model;
         });
+        /* eslint-enable */
 
         Builder::macro('withAggregates', function (array $aggregates) {
             if (! count($aggregates)) {
@@ -226,6 +230,5 @@ class ApiCrudServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../../config/fastApiCrud.php', 'fastApiCrud');
-        $this->commands([MakeAction::class, MakeService::class, MakeTrait::class]);
     }
 }

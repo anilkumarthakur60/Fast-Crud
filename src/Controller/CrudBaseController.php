@@ -3,12 +3,14 @@
 namespace Anil\FastApiCrud\Controller;
 
 use Exception;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Response;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -17,331 +19,370 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class CrudBaseController extends BaseController
 {
-    use AuthorizesRequests;
-    use ValidatesRequests;
+    use AuthorizesRequests, ValidatesRequests;
 
+    /**
+     * @var array<string>
+     */
     public array $scopes = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     public array $scopeWithValue = [];
 
+    /**
+     * @var array<string>
+     */
     public array $loadScopes = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     public array $loadScopeWithValue = [];
 
+    /**
+     * @var array<string>
+     */
     public array $withAll = [];
 
+    /**
+     * @var array<string>
+     */
     public array $withCount = [];
 
+    /**
+     * @var array<string>
+     */
     public array $withAggregate = [];
 
+    /**
+     * @var array<string>
+     */ 
     public array $loadAll = [];
 
+    /**
+     * @var array<string>
+     */
     public array $loadCount = [];
 
+    /**
+     * @var array<string>
+     */
     public array $loadAggregate = [];
 
-    public bool $isApi = true; // in future we will have it for both blade and api
+    /**
+     * @var bool
+     */
+    public bool $isApi = true; 
 
+    /**
+     * @var bool
+     */
     public bool $forceDelete = false;
 
+    /**
+     * @var array<string>
+     */
     public array $deleteScopes = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     public array $deleteScopeWithValue = [];
 
+    /**
+     * @var array<string>
+     */
     public array $changeStatusScopes = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     public array $changeStatusScopeWithValue = [];
 
+    /**
+     * @var array<string>
+     */
     public array $restoreScopes = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     public array $restoreScopeWithValue = [];
 
+    /**
+     * @var array<string>
+     */
     public array $updateScopes = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     public array $updateScopeWithValue = [];
 
-    public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource)
+    public Model $model;
+
+    public FormRequest $storeRequest;
+    public FormRequest $updateRequest;
+    public JsonResource $resource;
+
+    public function __construct(Model $model, FormRequest $storeRequest, FormRequest $updateRequest, JsonResource $resource)
     {
-        if (! (new $this->model instanceof Model)) {
-            throw new Exception('Model is not instance of Model', Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-        if (! (new $this->storeRequest instanceof FormRequest)) {
-            throw new Exception('StoreRequest is not instance of form request', Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        $this->model = $model;
+        $this->storeRequest = $storeRequest;
+        $this->updateRequest = $updateRequest;
+        $this->resource = $resource;
 
-        if (! (new $this->updateRequest instanceof FormRequest)) {
-            throw new Exception('UpdateRequest is not instance of FormRequest', Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        $this->validateModel($this->model);
+        $this->validateRequest($this->storeRequest, 'StoreRequest');
+        $this->validateRequest($this->updateRequest, 'UpdateRequest');
 
-        $constants = new ReflectionClass($this->model);
+        $this->setupPermissions();
+    }
 
-        try {
-            $permissionSlug = $constants->getConstant('permissionSlug');
-        } catch (Exception $e) {
-            $permissionSlug = null;
-        }
-        if ($permissionSlug) {
-            $this->middleware('permission:view-'.$this->model::permissionSlug)
-                ->only(['index', 'show']);
-
-            $this->middleware('permission:alter-'.$this->model::permissionSlug)
-                ->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
-
-            $this->middleware('permission:delete-'.$this->model::permissionSlug)
-                ->only(['delete']);
+    protected function validateModel(Model $model): void
+    {
+        if (! (new $model instanceof Model)) {
+            throw new Exception('Model is not instance of Model', ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function index()
+    protected function validateRequest(FormRequest $request, string $requestName): void
+    {
+        if (! (new $request instanceof FormRequest)) {
+            throw new Exception("$requestName is not instance of FormRequest", ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    protected function setupPermissions(): void
+    {
+        $constants = new ReflectionClass($this->model);
+        $permissionSlug = $constants->getConstant('permissionSlug') ?? null;
+
+        if ($permissionSlug) {
+            $this->middleware('permission:view-' . $permissionSlug)->only(['index', 'show']);
+            $this->middleware('permission:alter-' . $permissionSlug)->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
+            $this->middleware('permission:delete-' . $permissionSlug)->only(['delete']);
+        }
+    }
+
+    public function index(): AnonymousResourceCollection
     {
         $model = $this->model::initializer()
-            ->when(property_exists($this, 'withAll') && count($this->withAll), function ($query) {
-                return $query->with($this->withAll);
-            })
-            ->when(property_exists($this, 'withCount') && count($this->withCount), function ($query) {
-                return $query->withCount($this->withCount);
-            })
-            ->when(property_exists($this, 'withAggregate') && count($this->withAggregate), function ($query) {
-                return $query->withAggregates($this->withAggregate);
-            })
-            ->when(property_exists($this, 'scopes') && count($this->scopes), function ($query) {
-                foreach ($this->scopes as $value) {
-                    $query->$value();
-                }
-            })
-            ->when(property_exists($this, 'scopeWithValue') && count($this->scopeWithValue), function ($query) {
-                foreach ($this->scopeWithValue as $key => $value) {
-                    $query->$key($value);
-                }
-            });
+            ->when($this->withAll, fn($query) => $query->with($this->withAll))
+            ->when($this->withCount, fn($query) => $query->withCount($this->withCount))
+            ->when($this->withAggregate, fn($query) => $query->withAggregates($this->withAggregate))
+            ->when($this->scopes, fn($query) => $this->applyScopes($query, $this->scopes))
+            ->when($this->scopeWithValue, fn($query) => $this->applyScopeWithValue($query, $this->scopeWithValue));
 
         return $this->resource::collection($model->paginates());
     }
 
-    public function store()
+    protected function applyScopes(Builder $query, array $scopes): Builder
+    {
+        foreach ($scopes as $value) {
+            $query->$value();
+        }
+        return $query;
+    }
+
+    protected function applyScopeWithValue(Builder $query, array $scopeWithValue): Builder
+    {
+        foreach ($scopeWithValue as $key => $value) {
+            $query->$key($value);
+        }
+        return $query;
+    }
+
+    public function store(): JsonResponse|JsonResource
     {
         $data = resolve($this->storeRequest)->safe()->only((new $this->model)->getFillable());
 
         try {
             DB::beginTransaction();
             $model = $this->model::create($data);
-            if (method_exists(new $this->model, 'afterCreateProcess')) {
-                $model->afterCreateProcess();
-            }
-
+            $this->afterCreateProcess($model);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-
             return $this->error($e->getMessage());
         }
 
-        return $this->resource::make($model);
+        return new $this->resource($model);
     }
 
-    public function error(
-        $message = 'Something went wrong',
-        $data = [],
-        $code = Response::HTTP_INTERNAL_SERVER_ERROR,
-    ) {
-        return response()->json([
-            'message' => $message,
-            'data' => $data,
-        ], $code);
+    protected function afterCreateProcess(Model $model): Model|string
+    {
+        if (method_exists($model, 'afterCreateProcess')) {
+            $model->afterCreateProcess();
+        }
+
+        return $model;
     }
 
-    public function show($id)
+    public function error($message = 'Something went wrong', $data = [], $code = ResponseAlias::HTTP_INTERNAL_SERVER_ERROR)
+    {
+        return response()->json(['message' => $message, 'data' => $data], $code);
+    }
+
+    public function show(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::initializer()
-            ->when(property_exists($this, 'loadAll'), function ($query) {
-                return $query->with($this->loadAll);
-            })
-            ->when(property_exists($this, 'loadCount'), function ($query) {
-                return $query->withCount($this->loadCount);
-            })
-            ->when(property_exists($this, 'loadAggregate'), function ($query) {
-                foreach ($this->loadAggregate as $key => $value) {
-                    $query->withAggregate($key, $value);
-                }
-            })
-            ->when(property_exists($this, 'loadScopes') && count($this->loadScopes), function ($query) {
-                foreach ($this->loadScopes as $value) {
-                    $query->$value();
-                }
-            })
-            ->when(property_exists($this, 'loadScopeWithValue') && count($this->loadScopeWithValue), function ($query) {
-                foreach ($this->loadScopeWithValue as $key => $value) {
-                    $query->$key($value);
-                }
-            })
+            ->when($this->loadAll, fn(Builder $query): Builder => $query->with($this->loadAll))
+            ->when($this->loadCount, fn(Builder $query): Builder => $query->withCount($this->loadCount))
+            ->when($this->loadAggregate, fn(Builder $query): Builder => $this->applyLoadAggregate($query, $this->loadAggregate))
+            ->when($this->loadScopes, fn(Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
+            ->when($this->loadScopeWithValue, fn(Builder $query): Builder => $this->applyScopeWithValue($query, $this->loadScopeWithValue))
             ->findOrFail($id);
 
-        return $this->resource::make($model);
+        return new $this->resource($model);
     }
 
-    public function destroy($id)
+    protected function applyLoadAggregate($query, $loadAggregate)
     {
-        $model = $this->model::initializer()
-            ->when(property_exists($this, 'deleteScopes') && count($this->deleteScopes), function ($query) {
-                foreach ($this->deleteScopes as $value) {
-                    $query->$value();
-                }
-            })
-            ->when(property_exists($this, 'deleteScopeWithValue') && count($this->deleteScopeWithValue), function ($query) {
-                foreach ($this->deleteScopeWithValue as $key => $value) {
-                    $query->$key($value);
-                }
-            })
+        foreach ($loadAggregate as $key => $value) {
+            $query->withAggregate($key, $value);
+        }
+        return $query;
+    }
+
+    public function destroy(int|string $id): JsonResponse   
+    {
+        $model = $this->findModel($id, $this->deleteScopes, $this->deleteScopeWithValue);
+        $this->beforeDeleteProcess($model);
+        $this->forceDelete ? $model->forceDelete() : $model->delete();
+        $this->afterDeleteProcess($model);
+
+        return $this->success('Data deleted successfully', ResponseAlias::HTTP_NO_CONTENT);
+    }
+
+    protected function findModel(int|string $id, array $scopes, array $scopeWithValue)
+    {
+        return $this->model::initializer()
+            ->when($scopes, fn(Builder $query): Builder => $this->applyScopes($query, $scopes))
+                ->when($scopeWithValue, fn(Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue))
             ->findOrFail($id);
-        if (method_exists(new $this->model, 'beforeDeleteProcess')) {
+    }
+
+    protected function beforeDeleteProcess(Model $model): Model
+    {
+        if (method_exists(object_or_class: $model, method: 'beforeDeleteProcess')) {
             $model->beforeDeleteProcess();
         }
 
-        $this->forceDelete === true ? $model->forceDelete() : $model->delete();
-        if (method_exists(new $this->model, 'afterDeleteProcess')) {
+        return $model;
+    }
+
+    protected function afterDeleteProcess(Model $model): Model 
+    {
+        if (method_exists(object_or_class: $model, method: 'afterDeleteProcess')) {
             $model->afterDeleteProcess();
         }
 
-        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
+        return $model;
     }
 
     public function delete()
     {
         request()->validate([
             'delete_rows' => ['required', 'array'],
-            'delete_rows.*' => ['required', 'exists:'.(new $this->model)->getTable().',id'],
+            'delete_rows.*' => ['required', 'exists:' . (new $this->model)->getTable() . ',id'],
         ]);
 
         try {
             DB::beginTransaction();
             foreach ((array) request()->input('delete_rows') as $item) {
-                $model = $this->model::initializer()
-                    ->when(property_exists($this, 'deleteScopes') && count($this->deleteScopes), function ($query) {
-                        foreach ($this->deleteScopes as $value) {
-                            $query->$value();
-                        }
-                    })
-                    ->when(property_exists($this, 'deleteScopeWithValue') && count($this->deleteScopeWithValue), function ($query) {
-                        foreach ($this->deleteScopeWithValue as $key => $value) {
-                            $query->$key($value);
-                        }
-                    })
-                    ->find($item);
-
-                if (! $model) {
-                    continue;
-                }
-
-                if (method_exists(new $this->model, 'beforeDeleteProcess')) {
-                    $model->beforeDeleteProcess();
-                }
-                $this->forceDelete === true ? $model->forceDelete() : $model->delete();
-                if (method_exists(new $this->model, 'afterDeleteProcess')) {
-                    $model->afterDeleteProcess();
+                $model = $this->findModel($item, $this->deleteScopes, $this->deleteScopeWithValue);
+                if ($model) {
+                    $this->beforeDeleteProcess($model);
+                    $this->forceDelete ? $model->forceDelete() : $model->delete();
+                    $this->afterDeleteProcess($model);
                 }
             }
-
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-
             return $this->error($e->getMessage());
         }
 
-        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success('Data deleted successfully', ResponseAlias::HTTP_NO_CONTENT);
     }
 
-    public function success(
-        $message = 'Data fetched successfully',
-        $data = [],
-        $code = ResponseAlias::HTTP_OK,
-    ): JsonResponse {
-        return response()->json([
-            'message' => $message,
-            'data' => $data,
-        ], $code);
-    }
-
-    public function changeStatusOtherColumn($id, $column)
+    public function success($message = 'Data fetched successfully', $data = [], $code = ResponseAlias::HTTP_OK): JsonResponse
     {
-        $model = $this->model::initializer()
-            ->when(property_exists($this, 'changeStatusScopes') && count($this->changeStatusScopes), function ($query) {
-                foreach ($this->changeStatusScopes as $value) {
-                    $query->$value();
-                }
-            })
-            ->when(property_exists($this, 'changeStatusScopeWithValue') && count($this->changeStatusScopeWithValue), function ($query) {
-                foreach ($this->changeStatusScopeWithValue as $key => $value) {
-                    $query->$key($value);
-                }
-            })
-            ->findOrFail($id);
+        return response()->json(['message' => $message, 'data' => $data], $code);
+    }
 
+    public function changeStatusOtherColumn(int|string $id, string $column): JsonResource|JsonResponse
+    {
+        $model = $this->findModel($id, $this->changeStatusScopes, $this->changeStatusScopeWithValue);
+        $this->validateColumn($model, $column);
+        
         try {
             DB::beginTransaction();
-            if (method_exists(new $this->model, 'beforeChangeStatusProcess')) {
-                $model->beforeChangeStatusProcess();
-            }
-            if (! $this->checkFillable($model, [$column])) {
-                DB::rollBack();
-
-                throw new Exception("$column column not found in fillable");
-            }
+            $this->beforeChangeStatusProcess($model);
             $model->update([$column => $model->$column === 1 ? 0 : 1]);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-
             return $this->error($e->getMessage());
         }
 
-        return $this->resource::make($model);
+        return new $this->resource($model);
     }
 
-    protected function checkFillable($model, $columns): bool
+    protected function validateColumn(Model $model, string $column)
+    {
+        if (!$this->checkFillable($model, [$column])) {
+            throw new Exception("$column column not found in fillable");
+        }
+    }
+
+    protected function beforeChangeStatusProcess(Model $model)
+    {
+        if (method_exists($model, 'beforeChangeStatusProcess')) {
+            $model->beforeChangeStatusProcess();
+        }
+    }
+
+    protected function checkFillable(Model $model, array  $columns): bool
     {
         $fillableColumns = $this->fillableColumn($model);
-
-        $diff = array_diff($columns, $fillableColumns);
-
-        return count($diff) > 0 ? false : true;
+        return count(array_diff($columns, $fillableColumns)) === 0;
     }
 
-    public function update($id)
+    public function update(int|string $id): JsonResource|JsonResponse
     {
         $data = resolve($this->updateRequest)->safe()->only((new $this->model)->getFillable());
-
-        $model = $this->model::initializer()
-            ->when(property_exists($this, 'updateScopes') && count($this->updateScopes), function ($query) {
-                foreach ($this->updateScopes as $value) {
-                    $query->$value();
-                }
-            })
-            ->when(property_exists($this, 'updateScopeWithValue') && count($this->updateScopeWithValue), function ($query) {
-                foreach ($this->updateScopeWithValue as $key => $value) {
-                    $query->$key($value);
-                }
-            })
-            ->findOrFail($id);
+        $model = $this->findModel($id, $this->updateScopes, $this->updateScopeWithValue);
 
         try {
             DB::beginTransaction();
-            if (method_exists(new $this->model, 'beforeUpdateProcess')) {
-                $model->beforeUpdateProcess();
-            }
+            $this->beforeUpdateProcess($model);
             $model->update($data);
-            if (method_exists(new $this->model, 'afterUpdateProcess')) {
-                $model->afterUpdateProcess();
-            }
-
+            $this->afterUpdateProcess($model);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-
             return $this->error($e->getMessage());
         }
 
-        return $this->resource::make($model);
+        return new $this->resource($model);
+    }
+
+    protected function beforeUpdateProcess(Model $model)
+    {
+        if (method_exists($model, 'beforeUpdateProcess')) {
+            $model->beforeUpdateProcess();
+        }
+    }
+
+    protected function afterUpdateProcess(Model $model)
+    {
+        if (method_exists($model, 'afterUpdateProcess')) {
+            $model->afterUpdateProcess();
+        }
     }
 
     protected function fillableColumn($model): array
@@ -354,124 +395,119 @@ class CrudBaseController extends BaseController
         return $model->getTable();
     }
 
-    public function changeStatus($id)
+    public function changeStatus(int|string $id): JsonResource|JsonResponse
     {
-        $model = $this->model::initializer()
-            ->when(property_exists($this, 'changeStatusScopes') && count($this->changeStatusScopes), function ($query) {
-                foreach ($this->changeStatusScopes as $value) {
-                    $query->$value();
-                }
-            })
-            ->when(property_exists($this, 'changeStatusScopeWithValue') && count($this->changeStatusScopeWithValue), function ($query) {
-                foreach ($this->changeStatusScopeWithValue as $key => $value) {
-                    $query->$key($value);
-                }
-            })
-            ->findOrFail($id);
+        $model = $this->findModel($id, $this->changeStatusScopes, $this->changeStatusScopeWithValue);
+        $this->validateColumn($model, 'status');
 
         try {
             DB::beginTransaction();
-            if (method_exists(new $this->model, 'beforeChangeStatusProcess')) {
-                $model->beforeChangeStatusProcess();
-            }
-            if (! $this->checkFillable($model, ['status'])) {
-                DB::rollBack();
-
-                throw new Exception('Status column not found in fillable');
-            }
+            $this->beforeChangeStatusProcess($model);
             $model->update(['status' => $model->status === 1 ? 0 : 1]);
-            if (method_exists(new $this->model, 'afterChangeStatusProcess')) {
-                $model->afterChangeStatusProcess();
-            }
+            $this->afterChangeStatusProcess($model);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-
             return $this->error($e->getMessage());
         }
 
-        return $this->resource::make($model);
+        return new $this->resource($model);
     }
 
-    public function restoreTrashed($id)
+        public function restoreTrashed(int  |string $id): JsonResource|JsonResponse
     {
         $model = $this->model::initializer()->onlyTrashed()
-            ->when(property_exists($this, 'restoreScopes') && count($this->restoreScopes), function ($query) {
-                foreach ($this->restoreScopes as $value) {
-                    $query->$value();
-                }
-            })
-            ->when(property_exists($this, 'restoreScopeWithValue') && count($this->restoreScopeWithValue), function ($query) {
-                foreach ($this->restoreScopeWithValue as $key => $value) {
-                    $query->$key($value);
-                }
-            })
+            ->when($this->restoreScopes, fn($query) => $this->applyScopes($query, $this->restoreScopes))
+            ->when($this->restoreScopeWithValue, fn($query) => $this->applyScopeWithValue($query, $this->restoreScopeWithValue))
             ->findOrFail($id);
 
         try {
             DB::beginTransaction();
-
-            if (method_exists(new $this->model, 'beforeRestoreProcess')) {
-                $model->beforeRestoreProcess();
-            }
-
+            $this->beforeRestoreProcess($model);
             $model->restore();
-
-            if (method_exists(new $this->model, 'afterRestoreProcess')) {
-                $model->afterRestoreProcess();
-            }
-
+            $this->afterRestoreProcess($model);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-
             return $this->error($e->getMessage());
         }
 
-        return $this->resource::make($model);
+        return new $this->resource($model); 
     }
 
-    public function restoreAllTrashed()
+    protected function beforeRestoreProcess(Model $model):Model
+    {
+        if (method_exists($model, 'beforeRestoreProcess')) {
+            $model->beforeRestoreProcess();
+        }
+
+        return $model;
+    }
+
+    protected function afterRestoreProcess(Model $model):Model
+    {
+        if (method_exists($model, 'afterRestoreProcess')) {
+            $model->afterRestoreProcess();
+        }
+
+        return $model;
+    }
+
+    public function restoreAllTrashed(): JsonResponse
     {
         try {
             DB::beginTransaction();
-
             $this->model::initializer()->onlyTrashed()->restore();
-
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-
             return $this->error($e->getMessage());
         }
 
-        return $this->success(message: 'Data restored successfully');
+        return $this->success('Data restored successfully');
     }
 
-    public function forceDeleteTrashed($id)
+    public function forceDeleteTrashed(int|string $id): JsonResponse|Model
     {
         $model = $this->model::initializer()->onlyTrashed()->findOrFail($id);
 
         try {
             DB::beginTransaction();
-
-            if (method_exists(new $this->model, 'beforeForceDeleteProcess')) {
-                $model->beforeForceDeleteProcess();
-            }
-
+            $this->beforeForceDeleteProcess($model);
             $model->forceDelete();
-
-            if (method_exists(new $this->model, 'afterForceDeleteProcess')) {
-                $model->afterForceDeleteProcess();
-            }
-
+            $this->afterForceDeleteProcess($model);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-
             return $this->error($e->getMessage());
         }
 
-        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success('Data deleted successfully', ResponseAlias::HTTP_NO_CONTENT);
+    }
+
+    protected function beforeForceDeleteProcess(Model $model):Model
+    {
+        if (method_exists($model, 'beforeForceDeleteProcess')) {
+            $model->beforeForceDeleteProcess();
+        }
+        return $model;
+    }
+
+    protected function afterForceDeleteProcess(Model $model):Model
+    {
+        if (method_exists($model, 'afterForceDeleteProcess')) {
+            $model->afterForceDeleteProcess();
+        }
+
+        return $model;
+    }
+
+    protected function afterChangeStatusProcess(Model $model):Model|string
+    {
+        if (method_exists($model, 'afterChangeStatusProcess')) {
+            $model->afterChangeStatusProcess();
+        }
+
+        return $model;
     }
 }

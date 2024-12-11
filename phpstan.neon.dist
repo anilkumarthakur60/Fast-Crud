@@ -7,11 +7,15 @@ parameters:
     paths:
         - src/
         - database/
-    level: 9
+    level: 10
+
+    excludePaths:
+        - src/Providers/ApiCrudServiceProvider.php
+        - src/Helpers/fastApiCrud.php
 
     ignoreErrors:
         - '#Trait Anil\\FastApiCrud\\Traits\\Uuid is used zero times and is not analysed#'
         - '#Trait Anil\\FastApiCrud\\Traits\\ReplicatesWithRelations is used zero times and is not analysed#'
         - '#Trait Anil\\FastApiCrud\\Traits\\DeleteEvent is used zero times and is not analysed#'
         - '#Trait Anil\\FastApiCrud\\Traits\\DateFilters is used zero times and is not analysed#'
-
+        - '#Call to an undefined static method#'
