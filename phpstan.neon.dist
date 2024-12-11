@@ -8,3 +8,10 @@ parameters:
         - src/
         - database/
     level: 9
+
+    ignoreErrors:
+        - '#Trait Anil\\FastApiCrud\\Traits\\Uuid is used zero times and is not analysed#'
+        - '#Trait Anil\\FastApiCrud\\Traits\\ReplicatesWithRelations is used zero times and is not analysed#'
+        - '#Trait Anil\\FastApiCrud\\Traits\\DeleteEvent is used zero times and is not analysed#'
+        - '#Trait Anil\\FastApiCrud\\Traits\\DateFilters is used zero times and is not analysed#'
+

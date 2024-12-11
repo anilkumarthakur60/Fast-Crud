@@ -3,6 +3,7 @@
 namespace Anil\FastApiCrud\Traits;
 
 use Exception;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,6 +20,7 @@ trait ReplicatesWithRelations
      */
     public function replicateWithRelations(): self
     {
+        /** @var Model $this */
         $newModel = $this->replicate();
 
         foreach ($this->getMatchedCastableAttributes() as $attribute => $casts) {

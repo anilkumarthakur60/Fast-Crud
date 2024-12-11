@@ -4,10 +4,17 @@ namespace Anil\FastApiCrud\Traits;
 
 use Illuminate\Support\Str;
 
+/**
+ * Trait Uuid
+ */
 trait Uuid
 {
-    protected static function bootUuid()
+    /**
+     * Boot function from laravel.
+     */
+    protected static function bootUuid(): void
     {
+
         parent::boot();
 
         static::creating(function ($model) {
@@ -15,11 +22,17 @@ trait Uuid
         });
     }
 
+    /**
+     * Get the value indicating whether the IDs are incrementing.
+     */
     public function getIncrementing(): bool
     {
         return false;
     }
 
+    /**
+     * Get the data type of the primary key.
+     */
     public function getKeyType(): string
     {
         return 'string';
