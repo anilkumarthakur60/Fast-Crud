@@ -2,7 +2,7 @@
 
 namespace Anil\FastApiCrud\Database\Factories;
 
-use Anil\FastApiCrud\Tests\TestClasses\Models\UserModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

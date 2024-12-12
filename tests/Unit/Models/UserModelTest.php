@@ -1,7 +1,7 @@
 <?php
 
-use Anil\FastApiCrud\Tests\TestClasses\Models\PostModel;
-use Anil\FastApiCrud\Tests\TestClasses\Models\UserModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Support\Facades\Schema;
 
 describe(description: 'User Model Class Test', tests: function () {

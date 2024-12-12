@@ -1,6 +1,6 @@
 <?php
 
-namespace Anil\FastApiCrud\Tests\TestClasses\Requests\Post;
+namespace Anil\FastApiCrud\Tests\TestSetup\Requests\Post;
 
 use Illuminate\Foundation\Http\FormRequest;
 

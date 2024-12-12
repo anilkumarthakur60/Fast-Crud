@@ -1,10 +1,11 @@
 <?php
 
-use Anil\FastApiCrud\Tests\TestClasses\Models\UserModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 
 describe(description: 'Testing_Tag_Model_Factory', tests: function () {
     it(description: 'test_tag_model_fillable', closure: function () {
-        $tag = new UserModel;
+        $tag = new TagModel;
         $fillableKeys = array_keys($tag->getFillable());
         sort($fillableKeys);
         $expectedKeys = array_keys([
@@ -20,7 +21,7 @@ describe(description: 'Testing_Tag_Model_Factory', tests: function () {
             ->toBe($expectedKeys);
     });
     it(description: 'can_create_a_tag_using_factory', closure: function () {
-        $tag = UserModel::factory()
+        $tag = TagModel::factory()
             ->create(
                 [
                     'name' => $inputName = 'Tag 1',
@@ -51,7 +52,7 @@ describe(description: 'Testing_Tag_Model_Factory', tests: function () {
             ->toBe(0);
     });
     it(description: 'can_update_a_tag_using_factory', closure: function () {
-        $tag = UserModel::factory()
+        $tag = TagModel::factory()
             ->create(
                 [
                     'name' => 'Tag 1',
@@ -87,7 +88,7 @@ describe(description: 'Testing_Tag_Model_Factory', tests: function () {
         ]);
     });
     it(description: 'can_delete_a_tag_using_factory', closure: function () {
-        $tag = UserModel::factory()
+        $tag = TagModel::factory()
             ->create(
                 [
                     'name' => $inputName = 'Tag 1',
@@ -108,7 +109,7 @@ describe(description: 'Testing_Tag_Model_Factory', tests: function () {
 })->skip();
 describe(description: 'test_tag_controller', tests: function () {
     it(description: 'can_get_all_tags', closure: function () {
-        UserModel::factory()
+        TagModel::factory()
             ->createMany([
                 [
                     'name' => 'Tag 1',
@@ -244,7 +245,7 @@ describe(description: 'test_tag_controller', tests: function () {
             ]);
     });
     it(description: 'can_create_a_tag_in_api', closure: function () {
-        $tag = UserModel::factory()
+        $tag = TagModel::factory()
             ->raw(
                 [
                     'status' => 1,
@@ -261,7 +262,7 @@ describe(description: 'test_tag_controller', tests: function () {
         ]);
     });
     it(description: 'can_update_a_tag', closure: function () {
-        $tag = UserModel::factory()
+        $tag = TagModel::factory()
             ->create(
                 [
                     'name' => 'Tag 1',
@@ -283,25 +284,24 @@ describe(description: 'test_tag_controller', tests: function () {
         ]);
     });
     it(description: 'can_delete_a_tag', closure: function () {
-        $tag = UserModel::factory()
+        $tag = TagModel::factory()
             ->create([
                 'name' => 'Tag 1',
             ]);
-        $response = $this->deleteJson(uri: "tags/{$tag->id}");
-        $response->assertOk();
-        $response->assertJsonCount(count: 0, key: 'data');
-        $this->assertDatabaseHas('tags', [
+        $response = test()->deleteJson(uri: "tags/{$tag->id}");
+        $response->assertStatus(status: 204);
+        test()->assertDatabaseHas('tags', [
             'name' => 'Tag 1',
             'deleted_at' => now(),
         ]);
-        $this->assertDatabaseMissing('post_tag', [
+        test()->assertDatabaseMissing('post_tag', [
             'tag_id' => $tag->id,
         ]);
-        $this->assertSame(0, UserModel::query()
+        test()->assertSame(0, PostModel::query()
             ->count());
     });
     it(description: 'can_get_a_tag', closure: function () {
-        $tag = UserModel::factory()
+        $tag = TagModel::factory()
             ->create();
         $response = $this->get(uri: 'tags/'.$tag->id);
         $response->assertStatus(status: 200);
@@ -322,10 +322,10 @@ describe(description: 'test_tag_controller', tests: function () {
         );
     });
     it(description: 'can_post_a_tag_with_posts_ids', closure: function () {
-        $postIds = UserModel::factory(2)
+        $postIds = PostModel::factory(2)
             ->create()
             ->modelKeys();
-        $tag = UserModel::factory()
+        $tag = TagModel::factory()
             ->raw([
                 'name' => 'tag1',
                 'desc' => 'tag1 description',
@@ -337,12 +337,12 @@ describe(description: 'test_tag_controller', tests: function () {
             'post_ids' => $postIds,
         ]);
         $response->assertStatus(status: 201);
-        $this->assertDatabaseHas(table: 'tags', data: [
+        test()->assertDatabaseHas(table: 'tags', data: [
             ...$tag,
             'deleted_at' => null,
         ]);
-        $this->assertDatabaseHas(table: 'post_tag', data: ['tag_id' => 1, 'post_id' => 1]);
-        $this->assertDatabaseHas(table: 'post_tag', data: ['tag_id' => 1, 'post_id' => 2]);
-        $this->assertSame(2, UserModel::query()->find(1)->posts()->count());
+        test()->assertDatabaseHas(table: 'post_tag', data: ['tag_id' => 1, 'post_id' => 1]);
+        test()->assertDatabaseHas(table: 'post_tag', data: ['tag_id' => 1, 'post_id' => 2]);
+        test()->assertSame(2, TagModel::query()->find(1)->posts()->count());
     });
-})->skip();
+});

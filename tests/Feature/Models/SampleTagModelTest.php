@@ -1,6 +1,6 @@
 <?php
 
-use Anil\FastApiCrud\Tests\TestClasses\Models\TagModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 
 function createTag(array $attributes = []): TagModel
 {

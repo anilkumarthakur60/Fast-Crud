@@ -1,15 +1,15 @@
 <?php
 
-namespace Anil\FastApiCrud\Tests\TestClasses\Resources;
+namespace Anil\FastApiCrud\Tests\TestSetup\Resources;
 
-use Anil\FastApiCrud\Tests\TestClasses\Models\PostModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin PostModel
+ * @mixin TagModel
  */
-class PostResource extends JsonResource
+class TagResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -22,11 +22,11 @@ class PostResource extends JsonResource
             'id' => $this['id'],
             'name' => $this['name'],
             'desc' => $this['desc'],
-            'user_id' => $this['user_id'],
             'status' => $this['status'],
             'active' => $this['active'],
             'created_at' => $this['created_at'],
             'updated_at' => $this['updated_at'],
+            'deleted_at' => $this['deleted_at'],
         ];
     }
 }

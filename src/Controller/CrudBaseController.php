@@ -212,9 +212,9 @@ class CrudBaseController extends BaseController
             $query->withCount($this->withCount);
         }
 
-        if (! empty($this->withAggregate)) {
-            $query->withAggregate($this->withAggregate);
-        }
+        // if (! empty($this->withAggregate)) {
+        //     $query->withAggregate($this->withAggregate);
+        // }
 
         if (! empty($this->scopes)) {
             $this->applyScopes($query, $this->scopes);

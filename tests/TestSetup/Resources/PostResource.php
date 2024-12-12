@@ -1,15 +1,15 @@
 <?php
 
-namespace Anil\FastApiCrud\Tests\TestClasses\Resources;
+namespace Anil\FastApiCrud\Tests\TestSetup\Resources;
 
-use Anil\FastApiCrud\Tests\TestClasses\Models\UserModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin UserModel
+ * @mixin PostModel
  */
-class UserResource extends JsonResource
+class PostResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -18,12 +18,11 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-
         return [
             'id' => $this['id'],
             'name' => $this['name'],
-            'email' => $this['email'],
-            'password' => $this['password'],
+            'desc' => $this['desc'],
+            'user_id' => $this['user_id'],
             'status' => $this['status'],
             'active' => $this['active'],
             'created_at' => $this['created_at'],

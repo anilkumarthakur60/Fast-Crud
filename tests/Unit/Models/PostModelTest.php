@@ -1,8 +1,8 @@
 <?php
 
-use Anil\FastApiCrud\Tests\TestClasses\Models\PostModel;
-use Anil\FastApiCrud\Tests\TestClasses\Models\TagModel;
-use Anil\FastApiCrud\Tests\TestClasses\Models\UserModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Support\Facades\Schema;
 
 describe(description: 'Post Model Class Test', tests: function () {

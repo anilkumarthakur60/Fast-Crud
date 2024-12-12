@@ -1,6 +1,6 @@
 <?php
 
-namespace Anil\FastApiCrud\Tests\TestClasses\Models;
+namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
 use Anil\FastApiCrud\Database\Factories\PostModelFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

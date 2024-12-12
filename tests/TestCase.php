@@ -3,12 +3,12 @@
 namespace Anil\FastApiCrud\Tests;
 
 use Anil\FastApiCrud\Providers\ApiCrudServiceProvider;
-use Anil\FastApiCrud\Tests\TestClasses\Controllers\PostController;
-use Anil\FastApiCrud\Tests\TestClasses\Controllers\TagController;
-use Anil\FastApiCrud\Tests\TestClasses\Controllers\UserController;
-use Anil\FastApiCrud\Tests\TestClasses\Models\PostModel;
-use Anil\FastApiCrud\Tests\TestClasses\Models\TagModel;
-use Anil\FastApiCrud\Tests\TestClasses\Models\UserModel;
+use Anil\FastApiCrud\Tests\TestSetup\Controllers\PostController;
+use Anil\FastApiCrud\Tests\TestSetup\Controllers\TagController;
+use Anil\FastApiCrud\Tests\TestSetup\Controllers\UserController;
+use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;

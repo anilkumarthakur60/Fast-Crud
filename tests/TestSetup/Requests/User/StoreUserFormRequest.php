@@ -1,10 +1,10 @@
 <?php
 
-namespace Anil\FastApiCrud\Tests\TestClasses\Requests\Tag;
+namespace Anil\FastApiCrud\Tests\TestSetup\Requests\User;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreTagRequest extends FormRequest
+class StoreUserFormRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -18,21 +18,17 @@ class StoreTagRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                'unique:tags,name',
             ],
-            'desc' => [
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                'unique:users,email',
+            ],
+            'password' => [
                 'required',
                 'string',
-                'max:25500',
-
-            ],
-            'status' => [
-                'required',
-                'boolean',
-            ],
-            'active' => [
-                'required',
-                'boolean',
+                'min:8',
             ],
         ];
     }

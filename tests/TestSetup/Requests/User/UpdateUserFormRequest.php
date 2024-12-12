@@ -1,10 +1,11 @@
 <?php
 
-namespace Anil\FastApiCrud\Tests\TestClasses\Requests\Post;
+namespace Anil\FastApiCrud\Tests\TestSetup\Requests\User;
 
+use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePostRequest extends FormRequest
+class UpdateUserFormRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -13,21 +14,25 @@ class StorePostRequest extends FormRequest
      */
     public function rules(): array
     {
+        /** @var UserModel $route */
+        $route = $this->route('user');
+
         return [
             'name' => [
                 'required',
                 'string',
                 'max:255',
             ],
-            'description' => [
+            'email' => [
                 'required',
-                'string',
-                'max:25500',
+                'email',
+                'max:255',
+                'unique:users,email,'.$route->id,
             ],
-            'user_id' => [
-                'required',
-                'integer',
-                'exists:users,id',
+            'password' => [
+                'nullable',
+                'string',
+                'min:8',
             ],
         ];
     }
