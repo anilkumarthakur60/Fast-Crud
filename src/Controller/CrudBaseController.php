@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Schema;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
-
 /**
  * @property class-string<Model> $model
  * @property class-string<JsonResource> $resource
@@ -41,13 +40,6 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  * @property array<string, mixed> $restoreScopeWithValue
  * @property array<string> $updateScopes
  * @property array<string, mixed> $updateScopeWithValue
- * @property array<string> $deleteScopes
- * @property array<string, mixed> $deleteScopeWithValue
- * @property array<string> $changeStatusScopes
- * @property array<string, mixed> $changeStatusScopeWithValue
- * @property array<string> $restoreScopes
- * @property array<string, mixed> $restoreScopeWithValue
- * 
  */
 class CrudBaseController extends BaseController
 {
@@ -147,52 +139,50 @@ class CrudBaseController extends BaseController
      */
     public array $updateScopeWithValue = [];
 
-    /**
-     * @var Model
-     */
     public Model $model;
 
-    /**
-     * @var JsonResource
-     */
-    public JsonResource $resource;
-
-    /**
-     * @var FormRequest
-     */
     public FormRequest $storeRequest;
 
-    /**
-     * @var FormRequest
-     */
     public FormRequest $updateRequest;
 
-    public function __construct(Model $model, FormRequest $storeRequest, FormRequest $updateRequest, JsonResource $resource)
+    public function __construct(string $model, string $storeRequest, string $updateRequest, string $resource)
     {
-        $this->model = $model;
-        $this->storeRequest = $storeRequest;
-        $this->updateRequest = $updateRequest;
-        $this->resource = $resource;
-
-        $this->validateModel($this->model);
-        $this->validateRequest($this->storeRequest, 'StoreRequest');
-        $this->validateRequest($this->updateRequest, 'UpdateRequest');
-
+        $this->validateModel($model);
+        $this->validateRequest($storeRequest, 'StoreRequest');
+        $this->validateRequest($updateRequest, 'UpdateRequest');
+        $this->validateResource($resource, 'Resource');
         $this->setupPermissions();
     }
 
+    /**
+     * @throws Exception
+     */
     protected function validateModel(string $modelClass): void
     {
-        if (!is_subclass_of($modelClass, Model::class)) {
+        if (! is_subclass_of($modelClass, Model::class)) {
             throw new Exception('Model is not instance of Model', ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        $this->model = new $modelClass;
+    }
+
+    protected function validateRequest(string $request, string $requestName): void
+    {
+        if (! is_subclass_of($request, FormRequest::class)) {
+            throw new Exception("$requestName is not instance of FormRequest", ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        if ($requestName === 'StoreRequest') {
+            $this->storeRequest = new $request;
+        } else {
+            $this->updateRequest = new $request;
         }
     }
 
-    protected function validateRequest(FormRequest $request, string $requestName): void
+    protected function validateResource(string $resource, string $resourceName): void
     {
-        if (! (new $request instanceof FormRequest)) {
-            throw new Exception("$requestName is not instance of FormRequest", ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        if (! is_subclass_of($resource, JsonResource::class)) {
+            throw new Exception("$resourceName is not instance of JsonResource", ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
+        $this->resource = $resource;
     }
 
     protected function setupPermissions(): void
@@ -212,60 +202,66 @@ class CrudBaseController extends BaseController
      */
     public function index(): AnonymousResourceCollection
     {
-        $query = $this->model::query();
+        $query = $this->model::query()->initializer();
 
-        if (!empty($this->withAll)) {
+        if (! empty($this->withAll)) {
             $query->with($this->withAll);
         }
-        
-        if (!empty($this->withCount)) {
+
+        if (! empty($this->withCount)) {
             $query->withCount($this->withCount);
         }
 
-        // if (!empty($this->withAggregate)) {
-        //     $query->withAggregate($this->withAggregate);
-        // }
+        if (! empty($this->withAggregate)) {
+            $query->withAggregate($this->withAggregate);
+        }
 
-        if (!empty($this->scopes)) {
+        if (! empty($this->scopes)) {
             $this->applyScopes($query, $this->scopes);
         }
 
-        if (!empty($this->scopeWithValue)) {
+        if (! empty($this->scopeWithValue)) {
             $this->applyScopeWithValue($query, $this->scopeWithValue);
         }
 
-        return $this->resource::collection($query->paginate());
+        return $this->resource::collection($query->paginates());
     }
 
     /**
-     * @param Builder<Model> $query
-     * @param array<string> $scopes
+     * @param  Builder<Model>  $query
+     * @param  array<string>  $scopes
      * @return Builder<Model>
      */
     protected function applyScopes(Builder $query, array $scopes): Builder
     {
         foreach ($scopes as $scope) {
-            $query->{$scope}();
+            if (method_exists($query->getModel(), $scope)) {
+                $query->{$scope}();
+            }
         }
+
         return $query;
     }
 
     /**
-     * @param Builder<Model> $query
-     * @param array<string, mixed> $scopeWithValue
+     * @param  Builder<Model>  $query
+     * @param  array<string, mixed>  $scopeWithValue
      * @return Builder<Model>
      */
     protected function applyScopeWithValue(Builder $query, array $scopeWithValue): Builder
     {
         foreach ($scopeWithValue as $key => $value) {
-            $query->$key($value);
+            if (method_exists($query->getModel(), $key)) {
+                $query->$key($value);
+            }
         }
+
         return $query;
     }
 
     public function store(): JsonResponse|JsonResource
     {
-        $data = resolve($this->storeRequest)->safe()->only((new $this->model)->getFillable());
+        $data = resolve($this->storeRequest::class)->safe()->only((new $this->model)->getFillable());
 
         try {
             DB::beginTransaction();
@@ -291,9 +287,7 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @param string $message
-     * @param array<string, mixed> $data
-     * @param int $code
+     * @param  array<string, mixed>  $data
      */
     protected function error(
         string $message = 'Something went wrong',
@@ -303,7 +297,7 @@ class CrudBaseController extends BaseController
         return response()->json([
             'success' => false,
             'message' => $message,
-            'data' => $data
+            'data' => $data,
         ], $code);
     }
 
@@ -321,8 +315,8 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @param Builder<Model> $query
-     * @param array<string, array<string, mixed>> $loadAggregate
+     * @param  Builder<Model>  $query
+     * @param  array<string, array<string, mixed>>  $loadAggregate
      * @return Builder<Model>
      */
     protected function applyLoadAggregate(Builder $query, array $loadAggregate): Builder
@@ -346,24 +340,22 @@ class CrudBaseController extends BaseController
 
     /**
      * Find model by ID with optional scopes
-     * 
-     * @param int|string $id
-     * @param array<string> $scopes
-     * @param array<string, mixed> $scopeWithValue
-     * @return \Illuminate\Database\Eloquent\Model
+     *
+     * @param  array<string>  $scopes
+     * @param  array<string, mixed>  $scopeWithValue
      */
     protected function findModel(int|string $id, array $scopes = [], array $scopeWithValue = []): Model
     {
         $query = $this->model::query()
-            ->when(!empty($scopes), fn (Builder $query): Builder => $this->applyScopes($query, $scopes))
-            ->when(!empty($scopeWithValue), fn (Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue));
+            ->when(! empty($scopes), fn (Builder $query): Builder => $this->applyScopes($query, $scopes))
+            ->when(! empty($scopeWithValue), fn (Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue));
 
         return $query->findOrFail($id);
     }
 
     protected function beforeDeleteProcess(Model $model): Model
     {
-        if (method_exists(object_or_class: $model, method: 'beforeDeleteProcess')) {
+        if (method_exists($model, 'beforeDeleteProcess')) {
             $model->beforeDeleteProcess();
         }
 
@@ -372,14 +364,14 @@ class CrudBaseController extends BaseController
 
     protected function afterDeleteProcess(Model $model): Model
     {
-        if (method_exists(object_or_class: $model, method: 'afterDeleteProcess')) {
+        if (method_exists($model, 'afterDeleteProcess')) {
             $model->afterDeleteProcess();
         }
 
         return $model;
     }
 
-    public function delete(): JsonResponse  
+    public function delete(): JsonResponse
     {
         request()->validate([
             'delete_rows' => ['required', 'array'],
@@ -407,9 +399,7 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @param array<string, mixed>|null $data
-     * @param string $message
-     * @param int $code
+     * @param  array<string, mixed>|null  $data
      */
     protected function success(
         ?array $data = null,
@@ -419,7 +409,7 @@ class CrudBaseController extends BaseController
         return response()->json([
             'success' => true,
             'message' => $message,
-            'data' => $data
+            'data' => $data,
         ], $code);
     }
 
@@ -461,9 +451,7 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @param Model $model
-     * @param array<string> $columns
-     * @return bool
+     * @param  array<string>  $columns
      */
     protected function checkFillable(Model $model, array $columns): bool
     {
@@ -474,7 +462,7 @@ class CrudBaseController extends BaseController
 
     public function update(int|string $id): JsonResource|JsonResponse
     {
-        $data = resolve($this->updateRequest)->safe()->only((new $this->model)->getFillable());
+        $data = resolve($this->updateRequest::class)->safe()->only((new $this->model)->getFillable());
         $model = $this->findModel($id, $this->updateScopes, $this->updateScopeWithValue);
 
         try {
@@ -511,7 +499,6 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @param Model $model
      * @return array<string>
      */
     protected function fillableColumn(Model $model): array
@@ -519,10 +506,6 @@ class CrudBaseController extends BaseController
         return Schema::getColumnListing($this->tableName($model));
     }
 
-    /**
-     * @param Model $model
-     * @return string
-     */
     protected function tableName(Model $model): string
     {
         return $model->getTable();
@@ -536,7 +519,7 @@ class CrudBaseController extends BaseController
         try {
             DB::beginTransaction();
             $this->beforeChangeStatusProcess($model);
-            // $model->update(['status' => $model->status === 1 ? 0 : 1]);
+            $model->update(['status' => $model->status === 1 ? 0 : 1]);
             $this->afterChangeStatusProcess($model);
             DB::commit();
         } catch (Exception $e) {

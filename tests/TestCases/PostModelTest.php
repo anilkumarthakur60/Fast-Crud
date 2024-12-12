@@ -345,4 +345,4 @@ describe(description: 'test_tag_controller', tests: function () {
         $this->assertDatabaseHas(table: 'post_tag', data: ['tag_id' => 1, 'post_id' => 2]);
         $this->assertSame(2, PostModel::query()->find(1)->posts()->count());
     });
-})->skip();
+});

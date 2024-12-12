@@ -143,7 +143,7 @@ if (! function_exists('getArrayFilterByKey')) {
     /**
      * Get array filter by key
      *
-     * @param array<string, mixed>|string|null $data
+     * @param  array<string, mixed>|string|null  $data
      * @return array<string, mixed>
      */
     function getArrayFilterByKey($data): array
@@ -194,16 +194,16 @@ if (! function_exists('defaultSort')) {
     function defaultSort(): array|string|null
     {
         $sort = request('sort');
-        
+
         if (is_string($sort)) {
             return $sort;
         }
-        
+
         if (is_array($sort)) {
             /** @var array<string> */
             return array_filter($sort);
         }
-        
+
         return null;
     }
 }
@@ -240,7 +240,7 @@ if (! function_exists('getColumns')) {
         if (is_string($table)) {
             if (is_subclass_of($table, Model::class)) {
                 /** @var Model */
-                $model = new $table();
+                $model = new $table;
                 $columns = Schema::getColumnListing($model->getTable());
             } else {
                 $columns = Schema::getColumnListing($table);
