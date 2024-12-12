@@ -1,17 +1,19 @@
 <?php
+
 declare(strict_types=1);
 
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Schema;
 
 if (! function_exists('_dd')) {
 
     /**
      * Dump
-     * @param mixed ...$args
-     * @return void
+     *
+     * @param  mixed  ...$args
      */
     function _dd(...$args): void
     {
@@ -31,8 +33,7 @@ if (! function_exists('_dd')) {
 if (! function_exists('shortName')) {
     /**
      * Get the short name of the class
-     * @param string $param
-     * @return string|null
+     *
      * @throws ReflectionException
      */
     function shortName(string $param): ?string
@@ -49,8 +50,6 @@ if (! function_exists('shortName')) {
 if (! function_exists('totalSeconds')) {
     /**
      * Convert time string to total seconds
-     * @param string $times
-     * @return int|float
      */
     function totalSeconds(string $times): int|float
     {
@@ -65,7 +64,7 @@ if (! function_exists('totalSeconds')) {
             $carbon = new Carbon($minSec);
             $seconds = $carbon->diffInSeconds(Carbon::createFromFormat('H:i:s', '00:00:00'));
         } else {
-            $seconds = (int)$times; // Ensure $seconds is an integer
+            $seconds = (int) $times; // Ensure $seconds is an integer
         }
 
         return $seconds;
@@ -75,8 +74,6 @@ if (! function_exists('totalSeconds')) {
 if (! function_exists('duration')) {
     /**
      * Format duration in hours and minutes
-     * @param int $duration
-     * @return string
      */
     function duration(int $duration): string
     {
@@ -89,8 +86,6 @@ if (! function_exists('duration')) {
 if (! function_exists('dateForHumans')) {
     /**
      * Get human-readable date difference
-     * @param string|null $date
-     * @return string|null
      */
     function dateForHumans(?string $date): ?string
     {
@@ -105,9 +100,6 @@ if (! function_exists('dateForHumans')) {
 if (! function_exists('ymdDate')) {
     /**
      * Format date to specified format
-     * @param string|null $date
-     * @param string $format
-     * @return string|null
      */
     function ymdDate(?string $date, string $format = 'Y-m-d'): ?string
     {
@@ -122,9 +114,6 @@ if (! function_exists('ymdDate')) {
 if (! function_exists('dateForReports')) {
     /**
      * Format date for reports
-     * @param string|null $date
-     * @param string $format
-     * @return string|null
      */
     function dateForReports(?string $date, string $format = 'Y-m-d H:i'): ?string
     {
@@ -139,8 +128,6 @@ if (! function_exists('dateForReports')) {
 if (! function_exists('getFilterByKey')) {
     /**
      * Get filter value by key
-     * @param string $key
-     * @return string|null
      */
     function getFilterByKey(string $key = 'date'): ?string
     {
@@ -154,24 +141,32 @@ if (! function_exists('getFilterByKey')) {
 
 if (! function_exists('getArrayFilterByKey')) {
     /**
-     * Get array filter value by key
-     * @param string $key
-     * @return array
+     * Get array filter by key
+     *
+     * @param array<string, mixed>|string|null $data
+     * @return array<string, mixed>
      */
-    function getArrayFilterByKey(string $key = 'date'): array
+    function getArrayFilterByKey($data): array
     {
-        $jsonData = json_decode(request()->query('filters'), true);
-        $value = collect($jsonData)->get($key);
+        if (is_string($data)) {
+            $decoded = json_decode($data, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $data = $decoded;
+            } else {
+                $data = [];
+            }
+        }
 
-        return flatData($value) ?? [];
+        /** @var array<string, mixed> */
+        return collect($data ?? [])->filter()->all();
     }
 }
 
 if (! function_exists('flatData')) {
     /**
      * Flatten data
-     * @param array<mixed> $data
-     * @param int $depth
+     *
+     * @param  array<mixed>  $data
      * @return array<mixed>
      */
     function flatData(array $data, int $depth = 0): array
@@ -183,7 +178,6 @@ if (! function_exists('flatData')) {
 if (! function_exists('defaultOrder')) {
     /**
      * Get default order direction
-     * @return string
      */
     function defaultOrder(): string
     {
@@ -193,20 +187,31 @@ if (! function_exists('defaultOrder')) {
 
 if (! function_exists('defaultSort')) {
     /**
-     * Default sort
-     * @param string $key
-     * @return string|array<string>|null
+     * Get default sort
+     *
+     * @return array<string>|string|null
      */
-    function defaultSort(string $key = 'id'): string|array|null
+    function defaultSort(): array|string|null
     {
-        return request()->query('sortBy', $key);
+        $sort = request('sort');
+        
+        if (is_string($sort)) {
+            return $sort;
+        }
+        
+        if (is_array($sort)) {
+            /** @var array<string> */
+            return array_filter($sort);
+        }
+        
+        return null;
     }
 }
 
 if (! function_exists('getClassMethod')) {
     /**
      * Get class methods
-     * @param object $class
+     *
      * @return array<string>
      */
     function getClassMethod(object $class): array
@@ -227,23 +232,29 @@ if (! function_exists('getClassMethod')) {
 if (! function_exists('getColumns')) {
     /**
      * Get columns from a table
-     * @param string|Model $table
+     *
      * @return array<string>
      */
     function getColumns(string|Model $table = 'users'): array
     {
-        if (is_string($table) && is_subclass_of($table, 'Illuminate\Database\Eloquent\Model')) {
-            $model = new $table;
-
-            $columns = $model->getConnection()->getSchemaBuilder()->getColumnListing($model->getTable());
+        if (is_string($table)) {
+            if (is_subclass_of($table, Model::class)) {
+                /** @var Model */
+                $model = new $table();
+                $columns = Schema::getColumnListing($model->getTable());
+            } else {
+                $columns = Schema::getColumnListing($table);
+            }
         } else {
-            $columns = \Illuminate\Support\Facades\DB::getSchemaBuilder()->getColumnListing($table);
+            $columns = Schema::getColumnListing($table->getTable());
         }
 
         $columns = array_diff($columns, ['id']);
         $specialColumns = ['created_at', 'updated_at', 'deleted_at'];
         $columns = array_diff($columns, $specialColumns);
         sort($columns);
+
+        /** @var array<string> */
         return array_merge(['id'], $columns, $specialColumns);
     }
 }

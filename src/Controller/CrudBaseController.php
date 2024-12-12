@@ -3,7 +3,7 @@
 namespace Anil\FastApiCrud\Controller;
 
 use Exception;
-use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Http\FormRequest;
@@ -17,6 +17,38 @@ use Illuminate\Support\Facades\Schema;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
+
+/**
+ * @property class-string<Model> $model
+ * @property class-string<JsonResource> $resource
+ * @property array<string> $scopes
+ * @property array<string, mixed> $scopeWithValue
+ * @property array<string> $loadScopes
+ * @property array<string, mixed> $loadScopeWithValue
+ * @property array<string> $withAll
+ * @property array<string> $withCount
+ * @property array<string, array<string, mixed>> $withAggregate
+ * @property array<string> $loadAll
+ * @property array<string> $loadCount
+ * @property array<string> $loadAggregate
+ * @property bool $isApi
+ * @property bool $forceDelete
+ * @property array<string> $deleteScopes
+ * @property array<string, mixed> $deleteScopeWithValue
+ * @property array<string> $changeStatusScopes
+ * @property array<string, mixed> $changeStatusScopeWithValue
+ * @property array<string> $restoreScopes
+ * @property array<string, mixed> $restoreScopeWithValue
+ * @property array<string> $updateScopes
+ * @property array<string, mixed> $updateScopeWithValue
+ * @property array<string> $deleteScopes
+ * @property array<string, mixed> $deleteScopeWithValue
+ * @property array<string> $changeStatusScopes
+ * @property array<string, mixed> $changeStatusScopeWithValue
+ * @property array<string> $restoreScopes
+ * @property array<string, mixed> $restoreScopeWithValue
+ * 
+ */
 class CrudBaseController extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
@@ -52,13 +84,13 @@ class CrudBaseController extends BaseController
     public array $withCount = [];
 
     /**
-     * @var array<string>
+     * @var array<string, array<string, mixed>>
      */
     public array $withAggregate = [];
 
     /**
      * @var array<string>
-     */ 
+     */
     public array $loadAll = [];
 
     /**
@@ -71,14 +103,8 @@ class CrudBaseController extends BaseController
      */
     public array $loadAggregate = [];
 
-    /**
-     * @var bool
-     */
-    public bool $isApi = true; 
+    public bool $isApi = true;
 
-    /**
-     * @var bool
-     */
     public bool $forceDelete = false;
 
     /**
@@ -121,11 +147,25 @@ class CrudBaseController extends BaseController
      */
     public array $updateScopeWithValue = [];
 
+    /**
+     * @var Model
+     */
     public Model $model;
 
-    public FormRequest $storeRequest;
-    public FormRequest $updateRequest;
+    /**
+     * @var JsonResource
+     */
     public JsonResource $resource;
+
+    /**
+     * @var FormRequest
+     */
+    public FormRequest $storeRequest;
+
+    /**
+     * @var FormRequest
+     */
+    public FormRequest $updateRequest;
 
     public function __construct(Model $model, FormRequest $storeRequest, FormRequest $updateRequest, JsonResource $resource)
     {
@@ -141,9 +181,9 @@ class CrudBaseController extends BaseController
         $this->setupPermissions();
     }
 
-    protected function validateModel(Model $model): void
+    protected function validateModel(string $modelClass): void
     {
-        if (! (new $model instanceof Model)) {
+        if (!is_subclass_of($modelClass, Model::class)) {
             throw new Exception('Model is not instance of Model', ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -161,32 +201,60 @@ class CrudBaseController extends BaseController
         $permissionSlug = $constants->getConstant('permissionSlug') ?? null;
 
         if ($permissionSlug) {
-            $this->middleware('permission:view-' . $permissionSlug)->only(['index', 'show']);
-            $this->middleware('permission:alter-' . $permissionSlug)->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
-            $this->middleware('permission:delete-' . $permissionSlug)->only(['delete']);
+            $this->middleware('permission:view-'.$permissionSlug)->only(['index', 'show']);
+            $this->middleware('permission:alter-'.$permissionSlug)->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
+            $this->middleware('permission:delete-'.$permissionSlug)->only(['delete']);
         }
     }
 
+    /**
+     * @return AnonymousResourceCollection<JsonResource>
+     */
     public function index(): AnonymousResourceCollection
     {
-        $model = $this->model::initializer()
-            ->when($this->withAll, fn($query) => $query->with($this->withAll))
-            ->when($this->withCount, fn($query) => $query->withCount($this->withCount))
-            ->when($this->withAggregate, fn($query) => $query->withAggregates($this->withAggregate))
-            ->when($this->scopes, fn($query) => $this->applyScopes($query, $this->scopes))
-            ->when($this->scopeWithValue, fn($query) => $this->applyScopeWithValue($query, $this->scopeWithValue));
+        $query = $this->model::query();
 
-        return $this->resource::collection($model->paginates());
+        if (!empty($this->withAll)) {
+            $query->with($this->withAll);
+        }
+        
+        if (!empty($this->withCount)) {
+            $query->withCount($this->withCount);
+        }
+
+        // if (!empty($this->withAggregate)) {
+        //     $query->withAggregate($this->withAggregate);
+        // }
+
+        if (!empty($this->scopes)) {
+            $this->applyScopes($query, $this->scopes);
+        }
+
+        if (!empty($this->scopeWithValue)) {
+            $this->applyScopeWithValue($query, $this->scopeWithValue);
+        }
+
+        return $this->resource::collection($query->paginate());
     }
 
+    /**
+     * @param Builder<Model> $query
+     * @param array<string> $scopes
+     * @return Builder<Model>
+     */
     protected function applyScopes(Builder $query, array $scopes): Builder
     {
-        foreach ($scopes as $value) {
-            $query->$value();
+        foreach ($scopes as $scope) {
+            $query->{$scope}();
         }
         return $query;
     }
 
+    /**
+     * @param Builder<Model> $query
+     * @param array<string, mixed> $scopeWithValue
+     * @return Builder<Model>
+     */
     protected function applyScopeWithValue(Builder $query, array $scopeWithValue): Builder
     {
         foreach ($scopeWithValue as $key => $value) {
@@ -206,6 +274,7 @@ class CrudBaseController extends BaseController
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
+
             return $this->error($e->getMessage());
         }
 
@@ -221,48 +290,75 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
-    public function error($message = 'Something went wrong', $data = [], $code = ResponseAlias::HTTP_INTERNAL_SERVER_ERROR)
-    {
-        return response()->json(['message' => $message, 'data' => $data], $code);
+    /**
+     * @param string $message
+     * @param array<string, mixed> $data
+     * @param int $code
+     */
+    protected function error(
+        string $message = 'Something went wrong',
+        array $data = [],
+        int $code = ResponseAlias::HTTP_INTERNAL_SERVER_ERROR
+    ): JsonResponse {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'data' => $data
+        ], $code);
     }
 
     public function show(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::initializer()
-            ->when($this->loadAll, fn(Builder $query): Builder => $query->with($this->loadAll))
-            ->when($this->loadCount, fn(Builder $query): Builder => $query->withCount($this->loadCount))
-            ->when($this->loadAggregate, fn(Builder $query): Builder => $this->applyLoadAggregate($query, $this->loadAggregate))
-            ->when($this->loadScopes, fn(Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
-            ->when($this->loadScopeWithValue, fn(Builder $query): Builder => $this->applyScopeWithValue($query, $this->loadScopeWithValue))
+            ->when($this->loadAll, fn (Builder $query): Builder => $query->with($this->loadAll))
+            ->when($this->loadCount, fn (Builder $query): Builder => $query->withCount($this->loadCount))
+            ->when($this->loadAggregate, fn (Builder $query): Builder => $this->applyLoadAggregate($query, $this->loadAggregate))
+            ->when($this->loadScopes, fn (Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
+            ->when($this->loadScopeWithValue, fn (Builder $query): Builder => $this->applyScopeWithValue($query, $this->loadScopeWithValue))
             ->findOrFail($id);
 
         return new $this->resource($model);
     }
 
-    protected function applyLoadAggregate($query, $loadAggregate)
+    /**
+     * @param Builder<Model> $query
+     * @param array<string, array<string, mixed>> $loadAggregate
+     * @return Builder<Model>
+     */
+    protected function applyLoadAggregate(Builder $query, array $loadAggregate): Builder
     {
         foreach ($loadAggregate as $key => $value) {
             $query->withAggregate($key, $value);
         }
+
         return $query;
     }
 
-    public function destroy(int|string $id): JsonResponse   
+    public function destroy(int|string $id): JsonResponse
     {
         $model = $this->findModel($id, $this->deleteScopes, $this->deleteScopeWithValue);
         $this->beforeDeleteProcess($model);
         $this->forceDelete ? $model->forceDelete() : $model->delete();
         $this->afterDeleteProcess($model);
 
-        return $this->success('Data deleted successfully', ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
-    protected function findModel(int|string $id, array $scopes, array $scopeWithValue)
+    /**
+     * Find model by ID with optional scopes
+     * 
+     * @param int|string $id
+     * @param array<string> $scopes
+     * @param array<string, mixed> $scopeWithValue
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    protected function findModel(int|string $id, array $scopes = [], array $scopeWithValue = []): Model
     {
-        return $this->model::initializer()
-            ->when($scopes, fn(Builder $query): Builder => $this->applyScopes($query, $scopes))
-                ->when($scopeWithValue, fn(Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue))
-            ->findOrFail($id);
+        $query = $this->model::query()
+            ->when(!empty($scopes), fn (Builder $query): Builder => $this->applyScopes($query, $scopes))
+            ->when(!empty($scopeWithValue), fn (Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue));
+
+        return $query->findOrFail($id);
     }
 
     protected function beforeDeleteProcess(Model $model): Model
@@ -274,7 +370,7 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
-    protected function afterDeleteProcess(Model $model): Model 
+    protected function afterDeleteProcess(Model $model): Model
     {
         if (method_exists(object_or_class: $model, method: 'afterDeleteProcess')) {
             $model->afterDeleteProcess();
@@ -283,11 +379,11 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
-    public function delete()
+    public function delete(): JsonResponse  
     {
         request()->validate([
             'delete_rows' => ['required', 'array'],
-            'delete_rows.*' => ['required', 'exists:' . (new $this->model)->getTable() . ',id'],
+            'delete_rows.*' => ['required', 'exists:'.(new $this->model)->getTable().',id'],
         ]);
 
         try {
@@ -303,22 +399,35 @@ class CrudBaseController extends BaseController
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
+
             return $this->error($e->getMessage());
         }
 
-        return $this->success('Data deleted successfully', ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
-    public function success($message = 'Data fetched successfully', $data = [], $code = ResponseAlias::HTTP_OK): JsonResponse
-    {
-        return response()->json(['message' => $message, 'data' => $data], $code);
+    /**
+     * @param array<string, mixed>|null $data
+     * @param string $message
+     * @param int $code
+     */
+    protected function success(
+        ?array $data = null,
+        string $message = 'Success',
+        int $code = ResponseAlias::HTTP_OK
+    ): JsonResponse {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data
+        ], $code);
     }
 
     public function changeStatusOtherColumn(int|string $id, string $column): JsonResource|JsonResponse
     {
         $model = $this->findModel($id, $this->changeStatusScopes, $this->changeStatusScopeWithValue);
         $this->validateColumn($model, $column);
-        
+
         try {
             DB::beginTransaction();
             $this->beforeChangeStatusProcess($model);
@@ -326,29 +435,40 @@ class CrudBaseController extends BaseController
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
+
             return $this->error($e->getMessage());
         }
 
         return new $this->resource($model);
     }
 
-    protected function validateColumn(Model $model, string $column)
+    protected function validateColumn(Model $model, string $column): bool
     {
-        if (!$this->checkFillable($model, [$column])) {
+        if (! $this->checkFillable($model, [$column])) {
             throw new Exception("$column column not found in fillable");
         }
+
+        return true;
     }
 
-    protected function beforeChangeStatusProcess(Model $model)
+    protected function beforeChangeStatusProcess(Model $model): Model
     {
         if (method_exists($model, 'beforeChangeStatusProcess')) {
             $model->beforeChangeStatusProcess();
         }
+
+        return $model;
     }
 
-    protected function checkFillable(Model $model, array  $columns): bool
+    /**
+     * @param Model $model
+     * @param array<string> $columns
+     * @return bool
+     */
+    protected function checkFillable(Model $model, array $columns): bool
     {
         $fillableColumns = $this->fillableColumn($model);
+
         return count(array_diff($columns, $fillableColumns)) === 0;
     }
 
@@ -365,32 +485,45 @@ class CrudBaseController extends BaseController
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
+
             return $this->error($e->getMessage());
         }
 
         return new $this->resource($model);
     }
 
-    protected function beforeUpdateProcess(Model $model)
+    protected function beforeUpdateProcess(Model $model): Model
     {
         if (method_exists($model, 'beforeUpdateProcess')) {
             $model->beforeUpdateProcess();
         }
+
+        return $model;
     }
 
-    protected function afterUpdateProcess(Model $model)
+    protected function afterUpdateProcess(Model $model): Model
     {
         if (method_exists($model, 'afterUpdateProcess')) {
             $model->afterUpdateProcess();
         }
+
+        return $model;
     }
 
-    protected function fillableColumn($model): array
+    /**
+     * @param Model $model
+     * @return array<string>
+     */
+    protected function fillableColumn(Model $model): array
     {
         return Schema::getColumnListing($this->tableName($model));
     }
 
-    protected function tableName($model): string
+    /**
+     * @param Model $model
+     * @return string
+     */
+    protected function tableName(Model $model): string
     {
         return $model->getTable();
     }
@@ -403,22 +536,23 @@ class CrudBaseController extends BaseController
         try {
             DB::beginTransaction();
             $this->beforeChangeStatusProcess($model);
-            $model->update(['status' => $model->status === 1 ? 0 : 1]);
+            // $model->update(['status' => $model->status === 1 ? 0 : 1]);
             $this->afterChangeStatusProcess($model);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
+
             return $this->error($e->getMessage());
         }
 
         return new $this->resource($model);
     }
 
-        public function restoreTrashed(int  |string $id): JsonResource|JsonResponse
+    public function restoreTrashed(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::initializer()->onlyTrashed()
-            ->when($this->restoreScopes, fn($query) => $this->applyScopes($query, $this->restoreScopes))
-            ->when($this->restoreScopeWithValue, fn($query) => $this->applyScopeWithValue($query, $this->restoreScopeWithValue))
+            ->when($this->restoreScopes, fn ($query) => $this->applyScopes($query, $this->restoreScopes))
+            ->when($this->restoreScopeWithValue, fn ($query) => $this->applyScopeWithValue($query, $this->restoreScopeWithValue))
             ->findOrFail($id);
 
         try {
@@ -429,13 +563,14 @@ class CrudBaseController extends BaseController
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
+
             return $this->error($e->getMessage());
         }
 
-        return new $this->resource($model); 
+        return new $this->resource($model);
     }
 
-    protected function beforeRestoreProcess(Model $model):Model
+    protected function beforeRestoreProcess(Model $model): Model
     {
         if (method_exists($model, 'beforeRestoreProcess')) {
             $model->beforeRestoreProcess();
@@ -444,7 +579,7 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
-    protected function afterRestoreProcess(Model $model):Model
+    protected function afterRestoreProcess(Model $model): Model
     {
         if (method_exists($model, 'afterRestoreProcess')) {
             $model->afterRestoreProcess();
@@ -461,10 +596,11 @@ class CrudBaseController extends BaseController
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
+
             return $this->error($e->getMessage());
         }
 
-        return $this->success('Data restored successfully');
+        return $this->success(message: 'Data restored successfully');
     }
 
     public function forceDeleteTrashed(int|string $id): JsonResponse|Model
@@ -479,21 +615,23 @@ class CrudBaseController extends BaseController
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
+
             return $this->error($e->getMessage());
         }
 
-        return $this->success('Data deleted successfully', ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
-    protected function beforeForceDeleteProcess(Model $model):Model
+    protected function beforeForceDeleteProcess(Model $model): Model
     {
         if (method_exists($model, 'beforeForceDeleteProcess')) {
             $model->beforeForceDeleteProcess();
         }
+
         return $model;
     }
 
-    protected function afterForceDeleteProcess(Model $model):Model
+    protected function afterForceDeleteProcess(Model $model): Model
     {
         if (method_exists($model, 'afterForceDeleteProcess')) {
             $model->afterForceDeleteProcess();
@@ -502,7 +640,7 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
-    protected function afterChangeStatusProcess(Model $model):Model|string
+    protected function afterChangeStatusProcess(Model $model): Model|string
     {
         if (method_exists($model, 'afterChangeStatusProcess')) {
             $model->afterChangeStatusProcess();

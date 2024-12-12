@@ -9,8 +9,6 @@ class ApiCrudException extends Exception
 {
     /**
      * Render the exception.
-     *
-     * @return JsonResponse
      */
     public function render(): JsonResponse
     {

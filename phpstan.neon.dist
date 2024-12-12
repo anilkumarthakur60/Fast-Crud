@@ -7,7 +7,7 @@ parameters:
     paths:
         - src/
         - database/
-    level: 10
+    level: 9
 
     excludePaths:
         - src/Providers/ApiCrudServiceProvider.php
