@@ -15,16 +15,10 @@ jobs:
         php: [8.4,8.3]
         laravel: ["10.*", "11.*"]
         exclude:
-          - laravel: "8.*"
-            php: 8.2
-          - laravel: "8.*"
+          - laravel: "10.*"
             php: 8.3
-
-          - laravel: "9.*"
-            php: 8.3
-          
           - laravel: "11.*"
-            php: 8.1
+            php: 8.4
 
 
     name: running L-${{ matrix.php }} on PHP-${{ matrix.laravel }}
@@ -64,9 +58,6 @@ jobs:
   
       - name: Install dependencies
         run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-      
-      # - name: Laravel Version
-      #   run: composer show laravel/framework | grep -E '^(name|versions)'
       - name: Run php pest tests
         run: vendor/bin/pest
         env:

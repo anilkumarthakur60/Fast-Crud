@@ -15,8 +15,9 @@ use Illuminate\Support\Facades\DB;
 */
 
 uses(
-    TestCase::class
+    TestCase::class,
 )->in(__DIR__);
+
 /*
 |--------------------------------------------------------------------------
 | Expectations
