@@ -8,12 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
 
-if (! function_exists('_dd')) {
-
+if (!function_exists('_dd')) {
     /**
-     * Dump
+     * Dump.
      *
-     * @param  mixed  ...$args
+     * @param mixed ...$args
      */
     function _dd(...$args): void
     {
@@ -23,22 +22,22 @@ if (! function_exists('_dd')) {
         http_response_code(500);
 
         foreach ($args as $x) {
-            (new Symfony\Component\VarDumper\VarDumper)->dump($x);
+            (new Symfony\Component\VarDumper\VarDumper())->dump($x);
         }
 
         exit(1);
     }
 }
 
-if (! function_exists('shortName')) {
+if (!function_exists('shortName')) {
     /**
-     * Get the short name of the class
+     * Get the short name of the class.
      *
      * @throws ReflectionException
      */
     function shortName(string $param): ?string
     {
-        if (! app($param)) {
+        if (!app($param)) {
             return null;
         }
         $reflection = new ReflectionClass(app($param));
@@ -47,9 +46,9 @@ if (! function_exists('shortName')) {
     }
 }
 
-if (! function_exists('totalSeconds')) {
+if (!function_exists('totalSeconds')) {
     /**
-     * Convert time string to total seconds
+     * Convert time string to total seconds.
      */
     function totalSeconds(string $times): int|float
     {
@@ -71,9 +70,9 @@ if (! function_exists('totalSeconds')) {
     }
 }
 
-if (! function_exists('duration')) {
+if (!function_exists('duration')) {
     /**
-     * Format duration in hours and minutes
+     * Format duration in hours and minutes.
      */
     function duration(int $duration): string
     {
@@ -83,9 +82,9 @@ if (! function_exists('duration')) {
     }
 }
 
-if (! function_exists('dateForHumans')) {
+if (!function_exists('dateForHumans')) {
     /**
-     * Get human-readable date difference
+     * Get human-readable date difference.
      */
     function dateForHumans(?string $date): ?string
     {
@@ -97,9 +96,9 @@ if (! function_exists('dateForHumans')) {
     }
 }
 
-if (! function_exists('ymdDate')) {
+if (!function_exists('ymdDate')) {
     /**
-     * Format date to specified format
+     * Format date to specified format.
      */
     function ymdDate(?string $date, string $format = 'Y-m-d'): ?string
     {
@@ -111,9 +110,9 @@ if (! function_exists('ymdDate')) {
     }
 }
 
-if (! function_exists('dateForReports')) {
+if (!function_exists('dateForReports')) {
     /**
-     * Format date for reports
+     * Format date for reports.
      */
     function dateForReports(?string $date, string $format = 'Y-m-d H:i'): ?string
     {
@@ -125,9 +124,9 @@ if (! function_exists('dateForReports')) {
     }
 }
 
-if (! function_exists('getFilterByKey')) {
+if (!function_exists('getFilterByKey')) {
     /**
-     * Get filter value by key
+     * Get filter value by key.
      */
     function getFilterByKey(string $key = 'date'): ?string
     {
@@ -139,11 +138,12 @@ if (! function_exists('getFilterByKey')) {
     }
 }
 
-if (! function_exists('getArrayFilterByKey')) {
+if (!function_exists('getArrayFilterByKey')) {
     /**
-     * Get array filter by key
+     * Get array filter by key.
      *
      * @param array<string, mixed>|string|null $data
+     *
      * @return array<string, mixed>
      */
     function getArrayFilterByKey($data): array
@@ -162,11 +162,12 @@ if (! function_exists('getArrayFilterByKey')) {
     }
 }
 
-if (! function_exists('flatData')) {
+if (!function_exists('flatData')) {
     /**
-     * Flatten data
+     * Flatten data.
      *
-     * @param  array<mixed>  $data
+     * @param array<mixed> $data
+     *
      * @return array<mixed>
      */
     function flatData(array $data, int $depth = 0): array
@@ -175,9 +176,9 @@ if (! function_exists('flatData')) {
     }
 }
 
-if (! function_exists('defaultOrder')) {
+if (!function_exists('defaultOrder')) {
     /**
-     * Get default order direction
+     * Get default order direction.
      */
     function defaultOrder(): string
     {
@@ -185,32 +186,32 @@ if (! function_exists('defaultOrder')) {
     }
 }
 
-if (! function_exists('defaultSort')) {
+if (!function_exists('defaultSort')) {
     /**
-     * Get default sort
+     * Get default sort.
      *
      * @return array<string>|string|null
      */
     function defaultSort(): array|string|null
     {
         $sort = request('sort');
-        
+
         if (is_string($sort)) {
             return $sort;
         }
-        
+
         if (is_array($sort)) {
             /** @var array<string> */
             return array_filter($sort);
         }
-        
+
         return null;
     }
 }
 
-if (! function_exists('getClassMethod')) {
+if (!function_exists('getClassMethod')) {
     /**
-     * Get class methods
+     * Get class methods.
      *
      * @return array<string>
      */
@@ -229,9 +230,9 @@ if (! function_exists('getClassMethod')) {
     }
 }
 
-if (! function_exists('getColumns')) {
+if (!function_exists('getColumns')) {
     /**
-     * Get columns from a table
+     * Get columns from a table.
      *
      * @return array<string>
      */
