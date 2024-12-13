@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         php: [8.4, 8.3, 8.2, 8.1, 8.0]
-        laravel: ["^11.0", "^10.0", "^9.0", "^8.12"]
+        laravel: ["^11.0", "^10.0", "^9.0"]
         dependency-version: [prefer-lowest, prefer-stable]
         include:
           - laravel: "^11.0"
@@ -34,8 +34,6 @@ jobs:
             php: 8.0
           - laravel: "^8.12"
             php: 8.3
-          - laravel: "^8.12"
-            php: 8.4
 
     name: Running tests on PHP-${{ matrix.php }} and Laravel-${{ matrix.laravel }} with dependency version-${{ matrix.dependency-version }}
 
