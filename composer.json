@@ -22,6 +22,12 @@
     "illuminate/support": "^8.0||^9.0||^10.0||^11.0",
     "spatie/laravel-permission": "6.*|5.*|4.*"
   },
+  "require-dev": {
+    "larastan/larastan": "^1.0||^2.0||^3.0",
+    "laravel/pint": "^1.0",
+    "orchestra/testbench": "^7.0||^8.0||^9.0",
+    "pestphp/pest": "^1.0||^2.34"
+  },
   "license": "MIT",
   "autoload": {
     "psr-4": {
@@ -59,10 +65,9 @@
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
-  "require-dev": {
-    "larastan/larastan": "^3.0",
-    "laravel/pint": "^1.0",
-    "orchestra/testbench": "^7.0||^8.0||^9.0",
-    "pestphp/pest": "^1.0||^2.34"
-  }
+  "scripts": {
+    "test": "pest",
+    "format": "pint",
+    "analyse": "phpstan analyse"
+}
 }
