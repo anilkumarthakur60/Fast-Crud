@@ -92,7 +92,7 @@ class ApiCrudServiceProvider extends ServiceProvider
                 : $perPage
             ) ?: $this->model->getPerPage();
 
-            if (request()->filled('rowsPerPage') && ! ($perPage instanceof Closure)) {
+            if (request()->filled('rowsPerPage') && !($perPage instanceof Closure)) {
                 if ((int) request('rowsPerPage') === 0) {
                     $perPage = $total === 0 ? 15 : $total;
                 } else {
@@ -105,7 +105,7 @@ class ApiCrudServiceProvider extends ServiceProvider
                 : $this->model->newCollection();
 
             return $this->paginator($results, $total, $perPage, $page, [
-                'path' => Paginator::resolveCurrentPath(),
+                'path'     => Paginator::resolveCurrentPath(),
                 'pageName' => $pageName,
             ]);
         });
@@ -125,7 +125,7 @@ class ApiCrudServiceProvider extends ServiceProvider
             $this->offset(($page - 1) * $perPage)->limit($perPage + 1);
 
             return $this->simplePaginator($this->get($columns), $perPage, $page, [
-                'path' => Paginator::resolveCurrentPath(),
+                'path'     => Paginator::resolveCurrentPath(),
                 'pageName' => $pageName,
             ]);
         });
@@ -159,7 +159,7 @@ class ApiCrudServiceProvider extends ServiceProvider
                 $perPage,
                 $page,
                 [
-                    'path' => LengthAwarePaginator::resolveCurrentPath(),
+                    'path'     => LengthAwarePaginator::resolveCurrentPath(),
                     'pageName' => $pageName,
                 ]
             );
@@ -198,7 +198,7 @@ class ApiCrudServiceProvider extends ServiceProvider
         /* eslint-enable */
 
         Builder::macro('withAggregates', function (array $aggregates) {
-            if (! count($aggregates)) {
+            if (!count($aggregates)) {
                 return $this;
             }
             foreach ($aggregates as $relation => $columns) {
