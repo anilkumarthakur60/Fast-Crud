@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 describe(description: 'Tag Model Class Test1', tests: function () {
     beforeEach(function () {
-        $this->tagModel = new TagModel;
+        $this->tagModel = new TagModel();
     });
     it(description: 'it should have correct fillable attributes', closure: function () {
         $fillableKeys = array_keys($this->tagModel->getFillable());
@@ -97,5 +97,4 @@ describe(description: 'Tag Model Class Test1', tests: function () {
         $this->tagModel->posts()->sync($newPosts); // Updating post IDs
         expect($this->tagModel->posts()->count())->toBe(7);
     });
-
 });

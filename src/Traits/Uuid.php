@@ -5,7 +5,7 @@ namespace Anil\FastApiCrud\Traits;
 use Illuminate\Support\Str;
 
 /**
- * Trait Uuid
+ * Trait Uuid.
  */
 trait Uuid
 {
@@ -14,7 +14,6 @@ trait Uuid
      */
     protected static function bootUuid(): void
     {
-
         parent::boot();
 
         static::creating(function ($model) {
