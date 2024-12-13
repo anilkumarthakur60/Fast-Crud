@@ -17,8 +17,8 @@ describe('Tag Model API', function () {
     describe('CRUD Operations', function () {
         it('creates a tag', function () {
             $attributes = [
-                'name'   => 'Tag 1',
-                'desc'   => 'Tag 1 Description',
+                'name' => 'Tag 1',
+                'desc' => 'Tag 1 Description',
                 'status' => 1,
                 'active' => 0,
             ];
@@ -31,15 +31,15 @@ describe('Tag Model API', function () {
 
         it('updates a tag', function () {
             $tag = createTag([
-                'name'   => 'Tag 1',
-                'desc'   => 'Tag 1 Description',
+                'name' => 'Tag 1',
+                'desc' => 'Tag 1 Description',
                 'status' => 1,
                 'active' => 0,
             ]);
 
             $updatedAttributes = [
-                'name'   => 'Tag 2',
-                'desc'   => 'Tag 2 Description',
+                'name' => 'Tag 2',
+                'desc' => 'Tag 2 Description',
                 'status' => 0,
                 'active' => 1,
             ];
@@ -92,8 +92,8 @@ describe('Tag Model API', function () {
 
         it('creates a tag via API', function () {
             $attributes = [
-                'name'   => 'Tag 1',
-                'desc'   => 'Tag 1 Description',
+                'name' => 'Tag 1',
+                'desc' => 'Tag 1 Description',
                 'status' => 1,
                 'active' => 0,
             ];
@@ -114,15 +114,15 @@ describe('Tag Model API', function () {
 
         it('updates a tag via API', function () {
             $tag = createTag([
-                'name'   => 'Tag 1',
-                'desc'   => 'Tag 1 Description',
+                'name' => 'Tag 1',
+                'desc' => 'Tag 1 Description',
                 'status' => 1,
                 'active' => 0,
             ]);
 
             $updatedAttributes = [
-                'name'   => 'Tag 2',
-                'desc'   => 'Tag 2 Description',
+                'name' => 'Tag 2',
+                'desc' => 'Tag 2 Description',
                 'status' => 0,
                 'active' => 1,
             ];

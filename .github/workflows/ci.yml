@@ -21,10 +21,6 @@ jobs:
             testbench: 9.*
           - laravel: "^10.0"
             testbench: 8.*
-          - laravel: "^9.0"
-            testbench: 7.*
-          - laravel: "^8.12"
-            testbench: "^6.23"
         exclude:
           - laravel: "^11.0"
             php: 8.1
@@ -32,8 +28,6 @@ jobs:
             php: 8.0
           - laravel: "^10.0"
             php: 8.0
-          - laravel: "^8.12"
-            php: 8.3
 
     name: Running tests on PHP-${{ matrix.php }} and Laravel-${{ matrix.laravel }} with dependency version-${{ matrix.dependency-version }}
 

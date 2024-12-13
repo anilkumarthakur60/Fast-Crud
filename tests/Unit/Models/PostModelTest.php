@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 
 describe(description: 'Post Model Class Test', tests: function () {
     beforeEach(function () {
-        $this->postModel = new PostModel();
+        $this->postModel = new PostModel;
     });
 
     it(description: 'it should have correct fillable attributes', closure: function () {

@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
 
-if (!function_exists('_dd')) {
+if (! function_exists('_dd')) {
     /**
      * Dump.
      *
-     * @param mixed ...$args
+     * @param  mixed  ...$args
      */
     function _dd(...$args): void
     {
@@ -22,14 +22,14 @@ if (!function_exists('_dd')) {
         http_response_code(500);
 
         foreach ($args as $x) {
-            (new Symfony\Component\VarDumper\VarDumper())->dump($x);
+            (new Symfony\Component\VarDumper\VarDumper)->dump($x);
         }
 
         exit(1);
     }
 }
 
-if (!function_exists('shortName')) {
+if (! function_exists('shortName')) {
     /**
      * Get the short name of the class.
      *
@@ -37,7 +37,7 @@ if (!function_exists('shortName')) {
      */
     function shortName(string $param): ?string
     {
-        if (!app($param)) {
+        if (! app($param)) {
             return null;
         }
         $reflection = new ReflectionClass(app($param));
@@ -46,7 +46,7 @@ if (!function_exists('shortName')) {
     }
 }
 
-if (!function_exists('totalSeconds')) {
+if (! function_exists('totalSeconds')) {
     /**
      * Convert time string to total seconds.
      */
@@ -70,7 +70,7 @@ if (!function_exists('totalSeconds')) {
     }
 }
 
-if (!function_exists('duration')) {
+if (! function_exists('duration')) {
     /**
      * Format duration in hours and minutes.
      */
@@ -82,7 +82,7 @@ if (!function_exists('duration')) {
     }
 }
 
-if (!function_exists('dateForHumans')) {
+if (! function_exists('dateForHumans')) {
     /**
      * Get human-readable date difference.
      */
@@ -96,7 +96,7 @@ if (!function_exists('dateForHumans')) {
     }
 }
 
-if (!function_exists('ymdDate')) {
+if (! function_exists('ymdDate')) {
     /**
      * Format date to specified format.
      */
@@ -110,7 +110,7 @@ if (!function_exists('ymdDate')) {
     }
 }
 
-if (!function_exists('dateForReports')) {
+if (! function_exists('dateForReports')) {
     /**
      * Format date for reports.
      */
@@ -124,7 +124,7 @@ if (!function_exists('dateForReports')) {
     }
 }
 
-if (!function_exists('getFilterByKey')) {
+if (! function_exists('getFilterByKey')) {
     /**
      * Get filter value by key.
      */
@@ -138,12 +138,11 @@ if (!function_exists('getFilterByKey')) {
     }
 }
 
-if (!function_exists('getArrayFilterByKey')) {
+if (! function_exists('getArrayFilterByKey')) {
     /**
      * Get array filter by key.
      *
-     * @param array<string, mixed>|string|null $data
-     *
+     * @param  array<string, mixed>|string|null  $data
      * @return array<string, mixed>
      */
     function getArrayFilterByKey($data): array
@@ -162,12 +161,11 @@ if (!function_exists('getArrayFilterByKey')) {
     }
 }
 
-if (!function_exists('flatData')) {
+if (! function_exists('flatData')) {
     /**
      * Flatten data.
      *
-     * @param array<mixed> $data
-     *
+     * @param  array<mixed>  $data
      * @return array<mixed>
      */
     function flatData(array $data, int $depth = 0): array
@@ -176,7 +174,7 @@ if (!function_exists('flatData')) {
     }
 }
 
-if (!function_exists('defaultOrder')) {
+if (! function_exists('defaultOrder')) {
     /**
      * Get default order direction.
      */
@@ -186,7 +184,7 @@ if (!function_exists('defaultOrder')) {
     }
 }
 
-if (!function_exists('defaultSort')) {
+if (! function_exists('defaultSort')) {
     /**
      * Get default sort.
      *
@@ -209,7 +207,7 @@ if (!function_exists('defaultSort')) {
     }
 }
 
-if (!function_exists('getClassMethod')) {
+if (! function_exists('getClassMethod')) {
     /**
      * Get class methods.
      *
@@ -230,7 +228,7 @@ if (!function_exists('getClassMethod')) {
     }
 }
 
-if (!function_exists('getColumns')) {
+if (! function_exists('getColumns')) {
     /**
      * Get columns from a table.
      *
@@ -241,7 +239,7 @@ if (!function_exists('getColumns')) {
         if (is_string($table)) {
             if (is_subclass_of($table, Model::class)) {
                 /** @var Model */
-                $model = new $table();
+                $model = new $table;
                 $columns = Schema::getColumnListing($model->getTable());
             } else {
                 $columns = Schema::getColumnListing($table);
