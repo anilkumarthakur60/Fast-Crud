@@ -3,7 +3,9 @@
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 
+/** @test*/
 describe(description: 'Testing_Tag_Model_Factory', tests: function () {
+    /** @test*/
     it(description: 'test_tag_model_fillable', closure: function () {
         $tag = new TagModel;
         $fillableKeys = array_keys($tag->getFillable());

@@ -4,7 +4,7 @@ use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Support\Facades\Schema;
 
-describe(description: 'User Model Class Test', tests: function () {
+describe(description: 'User Model Class Unit Test', tests: function () {
     beforeEach(function () {
         $this->userModel = new UserModel;
     });
@@ -26,6 +26,7 @@ describe(description: 'User Model Class Test', tests: function () {
             ->toBe($expectedKeys);
     });
 
+    /** @test */
     it(description: 'it should have correct table name', closure: function () {
         expect($this->userModel->getTable())
             ->toBe('users');

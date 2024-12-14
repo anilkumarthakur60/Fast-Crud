@@ -3,10 +3,10 @@
 namespace Anil\FastApiCrud\Tests\TestSetup\Controllers;
 
 use Anil\FastApiCrud\Controller\CrudBaseController;
-use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
-use Anil\FastApiCrud\Tests\TestSetup\Requests\Post\StorePostRequest;
-use Anil\FastApiCrud\Tests\TestSetup\Requests\Post\UpdatePostRequest;
-use Anil\FastApiCrud\Tests\TestSetup\Resources\PostResource;
+use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
+use Anil\FastApiCrud\Tests\TestSetup\Requests\User\StoreUserFormRequest;
+use Anil\FastApiCrud\Tests\TestSetup\Requests\User\UpdateUserFormRequest;
+use Anil\FastApiCrud\Tests\TestSetup\Resources\UserResource;
 use Exception;
 
 class UserController extends CrudBaseController
@@ -17,10 +17,10 @@ class UserController extends CrudBaseController
     public function __construct()
     {
         parent::__construct(
-            model: PostModel::class,
-            storeRequest: StorePostRequest::class,
-            updateRequest: UpdatePostRequest::class,
-            resource: PostResource::class
+            model: UserModel::class,
+            storeRequest: StoreUserFormRequest::class,
+            updateRequest: UpdateUserFormRequest::class,
+            resource: UserResource::class
         );
     }
 }

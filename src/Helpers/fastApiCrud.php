@@ -7,6 +7,13 @@ use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
+use Pest\Concerns\Expectable;
+use Pest\PendingCalls\DescribeCall;
+use Pest\PendingCalls\TestCall;
+use Pest\Support\Backtrace;
+use Pest\Support\HigherOrderTapProxy;
+use Pest\TestSuite;
+use PHPUnit\Framework\TestCase;
 
 if (! function_exists('_dd')) {
     /**
@@ -255,5 +262,21 @@ if (! function_exists('getColumns')) {
 
         /** @var array<string> */
         return array_merge(['id'], $columns, $specialColumns);
+    }
+}
+
+if (! function_exists('describe')) {
+    /**
+     * Adds the given closure as a group of tests. The first argument
+     * is the group description; the second argument is a closure
+     * that contains the group tests.
+     *
+     * @return HigherOrderTapProxy<Expectable|TestCall|TestCase>|Expectable|TestCall|TestCase|mixed
+     */
+    function describe(string $description, Closure $tests): DescribeCall
+    {
+        $filename = Backtrace::testFile();
+
+        return new DescribeCall(TestSuite::getInstance(), $filename, $description, $tests);
     }
 }
