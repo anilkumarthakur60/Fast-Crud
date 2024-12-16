@@ -6,11 +6,11 @@ use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 describe(description: 'User Model Feature Test', tests: function () {
     it('can create a user', function () {
         $userData = [
-            'name' => 'John Doe',
-            'email' => 'john@example.com',
+            'name'     => 'John Doe',
+            'email'    => 'john@example.com',
             'password' => Hash::make('password123'),
-            'active' => true,
-            'status' => true,
+            'active'   => true,
+            'status'   => true,
         ];
 
         $user = UserModel::create($userData);
@@ -22,15 +22,15 @@ describe(description: 'User Model Feature Test', tests: function () {
             ->and($user->status)->toBeTrue();
 
         $this->assertDatabaseHas('users', [
-            'name' => 'John Doe',
-            'email' => 'john@example.com',
+            'name'   => 'John Doe',
+            'email'  => 'john@example.com',
             'active' => true,
             'status' => true,
         ]);
     });
 
     it(description: 'it should have all the fillable fields', closure: function () {
-        $tag = new UserModel;
+        $tag = new UserModel();
         $fillables = $tag->getFillable();
         sort($fillables);
         $expectedFillables = [
@@ -50,11 +50,11 @@ describe(description: 'User Model Feature Test', tests: function () {
         $user = UserModel::factory()
             ->create(
                 [
-                    'name' => $inputName = 'John Doe',
-                    'email' => $inputEmail = 'john@example.com',
+                    'name'     => $inputName = 'John Doe',
+                    'email'    => $inputEmail = 'john@example.com',
                     'password' => $inputPassword = 'password123',
-                    'status' => true,
-                    'active' => false,
+                    'status'   => true,
+                    'active'   => false,
                 ],
             );
         expect($user->name)
@@ -66,8 +66,8 @@ describe(description: 'User Model Feature Test', tests: function () {
             ->and($user->active)
             ->toBe(expected: false);
         $this->assertDatabaseHas(table: 'users', data: [
-            'name' => $inputName,
-            'email' => $inputEmail,
+            'name'   => $inputName,
+            'email'  => $inputEmail,
             'status' => true,
             'active' => false,
         ]);
@@ -81,17 +81,17 @@ describe(description: 'User Model Feature Test', tests: function () {
         $user = UserModel::factory()
             ->create(
                 [
-                    'name' => 'John Doe',
-                    'email' => 'john@example.com',
+                    'name'     => 'John Doe',
+                    'email'    => 'john@example.com',
                     'password' => 'password123',
-                    'status' => 1,
-                    'active' => 0,
+                    'status'   => 1,
+                    'active'   => 0,
                 ],
             );
         $user->update(
             [
-                'name' => $inputName = 'Jane Doe',
-                'email' => $inputEmail = 'jane@example.com',
+                'name'   => $inputName = 'Jane Doe',
+                'email'  => $inputEmail = 'jane@example.com',
                 'status' => $active = 0,
                 'active' => $inActive = 1,
             ],
@@ -105,8 +105,8 @@ describe(description: 'User Model Feature Test', tests: function () {
             ->and($user->active)
             ->toBe(expected: $inActive);
         $this->assertDatabaseHas('users', [
-            'name' => $inputName,
-            'email' => $inputEmail,
+            'name'   => $inputName,
+            'email'  => $inputEmail,
             'status' => $active,
             'active' => $inActive,
         ]);
@@ -115,20 +115,20 @@ describe(description: 'User Model Feature Test', tests: function () {
         $user = UserModel::factory()
             ->create(
                 [
-                    'name' => $inputName = 'John Doe',
-                    'email' => $inputEmail = 'john@example.com',
+                    'name'     => $inputName = 'John Doe',
+                    'email'    => $inputEmail = 'john@example.com',
                     'password' => $inputPassword = 'password123',
-                    'status' => $active = true,
-                    'active' => $inActive = false,
+                    'status'   => $active = true,
+                    'active'   => $inActive = false,
                 ]
             );
         $user->forceDelete();
         $this->assertDatabaseMissing('users', [
-            'name' => $inputName,
-            'email' => $inputEmail,
+            'name'     => $inputName,
+            'email'    => $inputEmail,
             'password' => $inputPassword,
-            'status' => $active,
-            'active' => $inActive,
+            'status'   => $active,
+            'active'   => $inActive,
         ]);
     });
 });
@@ -137,69 +137,70 @@ describe(description: 'User Model API Test', tests: function () {
         UserModel::factory()
             ->createMany([
                 [
-                    'name' => 'John Doe1',
-                    'email' => 'john1@example.com',
+                    'name'     => 'John Doe1',
+                    'email'    => 'john1@example.com',
                     'password' => 'password123',
-                    'status' => 1,
-                    'active' => 1,
+                    'status'   => 1,
+                    'active'   => 1,
                 ],
                 [
-                    'name' => 'John Doe2',
-                    'email' => 'john2@example.com',
+                    'name'     => 'John Doe2',
+                    'email'    => 'john2@example.com',
                     'password' => 'password123',
-                    'status' => 0,
-                    'active' => 0,
+                    'status'   => 0,
+                    'active'   => 0,
                 ],
                 [
-                    'name' => 'John Doe3',
-                    'email' => 'john3@example.com',
+                    'name'     => 'John Doe3',
+                    'email'    => 'john3@example.com',
                     'password' => 'password123',
-                    'status' => 1,
-                    'active' => 0,
+                    'status'   => 1,
+                    'active'   => 0,
                 ],
                 [
-                    'name' => 'John Doe4',
-                    'email' => 'john4@example.com',
+                    'name'     => 'John Doe4',
+                    'email'    => 'john4@example.com',
                     'password' => 'password123',
-                    'status' => 0,
-                    'active' => 1,
+                    'status'   => 0,
+                    'active'   => 1,
                 ],
                 [
-                    'name' => 'John Doe5',
-                    'email' => 'john5@example.com',
+                    'name'     => 'John Doe5',
+                    'email'    => 'john5@example.com',
                     'password' => 'password123',
-                    'status' => 1,
-                    'active' => 1,
+                    'status'   => 1,
+                    'active'   => 1,
                 ],
                 [
-                    'name' => 'John Doe6',
-                    'email' => 'john6@example.com',
+                    'name'     => 'John Doe6',
+                    'email'    => 'john6@example.com',
                     'password' => 'password123',
-                    'status' => 0,
-                    'active' => 0,
+                    'status'   => 0,
+                    'active'   => 0,
                 ],
                 [
-                    'name' => 'John Doe7',
-                    'email' => 'john7@example.com',
+                    'name'     => 'John Doe7',
+                    'email'    => 'john7@example.com',
                     'password' => 'password123',
-                    'status' => 1,
-                    'active' => 0,
+                    'status'   => 1,
+                    'active'   => 0,
                 ],
                 [
-                    'name' => 'John Doe8',
-                    'email' => 'john8@example.com',
+                    'name'     => 'John Doe8',
+                    'email'    => 'john8@example.com',
                     'password' => 'password123',
-                    'status' => 0,
-                    'active' => 1,
+                    'status'   => 0,
+                    'active'   => 1,
                 ],
             ]);
         $this->get(uri: route('users.index', [
-            'page' => 1,
+            'page'        => 1,
             'rowsPerPage' => 10,
         ]))
             ->assertOk()
             ->assertJsonCount(count: 8, key: 'data')
-            ->assertJsonStructure($jsonStructure =
+            ->assertJsonStructure(
+                $jsonStructure =
                 [
                     'data' => [
                         [
@@ -280,8 +281,8 @@ describe(description: 'User Model API Test', tests: function () {
         $this->getJson(uri: route('users.index', [
             'filters' => json_encode([
                 'queryFilter' => 'John Doe2',
-                'active' => 0,
-                'status' => 0,
+                'active'      => 0,
+                'status'      => 0,
             ]),
         ]))
             ->assertOk()
@@ -291,8 +292,8 @@ describe(description: 'User Model API Test', tests: function () {
         $this->getJson(uri: route('users.index', [
             'filters' => json_encode([
                 'queryFilter' => 'John Doe1',
-                'active' => 1,
-                'status' => 1,
+                'active'      => 1,
+                'status'      => 1,
             ]),
         ]))
             ->assertOk()
@@ -302,8 +303,8 @@ describe(description: 'User Model API Test', tests: function () {
         $this->getJson(uri: route('users.index', [
             'filters' => json_encode([
                 'queryFilter' => 'John Doe1',
-                'active' => 0,
-                'status' => 0,
+                'active'      => 0,
+                'status'      => 0,
             ]),
         ]))
             ->assertOk()
@@ -316,8 +317,8 @@ describe(description: 'User Model API Test', tests: function () {
         $this->getJson(uri: route('users.index', [
             'filters' => json_encode([
                 'queryFilter' => 'John Doe1',
-                'active' => 0,
-                'status' => 0,
+                'active'      => 0,
+                'status'      => 0,
             ]),
         ]))
             ->assertOk()
@@ -330,8 +331,8 @@ describe(description: 'User Model API Test', tests: function () {
         $this->getJson(uri: route('users.index', [
             'filters' => json_encode([
                 'queryFilter' => 'John Doe5',
-                'active' => 1,
-                'status' => 1,
+                'active'      => 1,
+                'status'      => 1,
             ]),
         ]))
             ->assertOk()
@@ -341,8 +342,8 @@ describe(description: 'User Model API Test', tests: function () {
         $this->getJson(uri: route('users.index', [
             'filters' => json_encode([
                 'queryFilter' => 'John Doe5',
-                'active' => 0,
-                'status' => 0,
+                'active'      => 0,
+                'status'      => 0,
             ]),
         ]))
             ->assertOk()
@@ -379,7 +380,7 @@ describe(description: 'User Model API Test', tests: function () {
 
         $this->getJson(uri: route('users.index', [
             'filters' => json_encode([
-                'hasPosts' => 1,
+                'hasPosts'    => 1,
                 'queryFilter' => 'john2@example.com',
             ]),
         ]))
@@ -412,19 +413,19 @@ describe(description: 'User Model API Test', tests: function () {
         $user = UserModel::factory()
             ->create(
                 [
-                    'name' => 'John Doe1',
-                    'email' => 'john1@example.com',
+                    'name'     => 'John Doe1',
+                    'email'    => 'john1@example.com',
                     'password' => 'password123',
-                    'status' => 1,
-                    'active' => 0,
+                    'status'   => 1,
+                    'active'   => 0,
                 ]
             );
         $response = $this->putJson(uri: route('users.update', $user->id), data: [
-            'name' => 'Jane Doe2',
-            'email' => 'jane2@example.com',
+            'name'     => 'Jane Doe2',
+            'email'    => 'jane2@example.com',
             'password' => 'password123',
-            'status' => 0,
-            'active' => 1,
+            'status'   => 0,
+            'active'   => 1,
         ]);
         $response->assertStatus(status: 200)
             ->assertJsonStructure([
@@ -439,8 +440,8 @@ describe(description: 'User Model API Test', tests: function () {
                 ],
             ]);
         $this->assertDatabaseHas('users', [
-            'name' => 'Jane Doe2',
-            'email' => 'jane2@example.com',
+            'name'   => 'Jane Doe2',
+            'email'  => 'jane2@example.com',
             'status' => 0,
             'active' => 1,
         ]);
@@ -448,19 +449,19 @@ describe(description: 'User Model API Test', tests: function () {
     it(description: 'can_delete_a_user', closure: function () {
         $user = UserModel::factory()
             ->create([
-                'name' => 'John Doe1',
-                'email' => 'john1@example.com',
+                'name'     => 'John Doe1',
+                'email'    => 'john1@example.com',
                 'password' => 'password123',
-                'status' => 1,
-                'active' => 0,
+                'status'   => 1,
+                'active'   => 0,
             ]);
         $response = $this->deleteJson(uri: route('users.destroy', $user->id));
         $response->assertNoContent();
         $this->assertDatabaseHas('users', [
-            'name' => 'John Doe1',
-            'email' => 'john1@example.com',
-            'status' => 1,
-            'active' => 0,
+            'name'       => 'John Doe1',
+            'email'      => 'john1@example.com',
+            'status'     => 1,
+            'active'     => 0,
             'deleted_at' => now(),
         ]);
 
@@ -483,23 +484,23 @@ describe(description: 'User Model API Test', tests: function () {
                         'created_at',
                         'updated_at',
                     ],
-                ]);
+                ]
+            );
     });
     it(description: 'can_post_a_user_with_posts_ids', closure: function () {
-
         $post = PostModel::factory()->raw([
-            'name' => 'Post 1',
-            'desc' => 'Post 1 desc',
+            'name'   => 'Post 1',
+            'desc'   => 'Post 1 desc',
             'status' => 1,
             'active' => 0,
         ]);
         $user = UserModel::factory()
             ->raw([
-                'name' => 'user1',
-                'email' => 'user1@example.com',
+                'name'     => 'user1',
+                'email'    => 'user1@example.com',
                 'password' => 'password123',
-                'status' => 1,
-                'active' => 0,
+                'status'   => 1,
+                'active'   => 0,
             ]);
         $response = $this->postJson(uri: route('users.store'), data: [
             ...$user,
@@ -516,16 +517,16 @@ describe(description: 'User Model API Test', tests: function () {
                 ],
             ]);
         $this->assertDatabaseHas(table: 'users', data: [
-            'name' => 'user1',
-            'email' => 'user1@example.com',
+            'name'   => 'user1',
+            'email'  => 'user1@example.com',
             'status' => 1,
             'active' => 0,
         ]);
         $this->assertDatabaseHas(table: 'posts', data: [
-            'name' => 'Post 1',
-            'desc' => 'Post 1 desc',
-            'status' => 1,
-            'active' => 0,
+            'name'    => 'Post 1',
+            'desc'    => 'Post 1 desc',
+            'status'  => 1,
+            'active'  => 0,
             'user_id' => $response->json()['data']['id'],
         ]);
         $this->assertSame(1, UserModel::query()->find($response->json()['data']['id'])->posts()->count());
