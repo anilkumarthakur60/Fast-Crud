@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Request;
 
 class UserModel extends Model
 {
@@ -23,6 +24,10 @@ class UserModel extends Model
         'password',
         'status',
         'active',
+    ];
+
+    protected $casts = [
+        'password' => 'hashed',
     ];
 
     /**
@@ -68,5 +73,31 @@ class UserModel extends Model
     public function scopeStatus(Builder $query, int $status = 1): Builder
     {
         return $query->where('status', $status);
+    }
+
+    /**
+     * @param  Builder<UserModel>  $query
+     * @return Builder<UserModel>
+     */
+    public function scopeHasPosts(Builder $query): Builder
+    {
+
+        return $query->whereHas('posts');
+    }
+
+    public function afterCreateProcess(): static
+    {
+        $request = Request::instance();
+        if ($request->has('post')) {
+            $postData = $request->input('post');
+            $this->posts()->create([
+                'name' => $postData['name'],
+                'desc' => $postData['desc'],
+                'status' => $postData['status'],
+                'active' => $postData['active'],
+            ]);
+        }
+
+        return $this;
     }
 }

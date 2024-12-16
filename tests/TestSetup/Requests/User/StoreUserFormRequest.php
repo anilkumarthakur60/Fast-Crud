@@ -30,6 +30,14 @@ class StoreUserFormRequest extends FormRequest
                 'string',
                 'min:8',
             ],
+            'status' => [
+                'required',
+                'boolean',
+            ],
+            'active' => [
+                'required',
+                'boolean',
+            ],
         ];
     }
 

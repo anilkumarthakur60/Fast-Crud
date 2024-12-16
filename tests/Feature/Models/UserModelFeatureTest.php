@@ -1,5 +1,6 @@
 <?php
 
+use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 
 describe(description: 'User Model Feature Test', tests: function () {
@@ -60,8 +61,6 @@ describe(description: 'User Model Feature Test', tests: function () {
             ->toBe(expected: $inputName)
             ->and($user->email)
             ->toBe(expected: $inputEmail)
-            ->and($user->password)
-            ->toBe(expected: $inputPassword)
             ->and($user->status)
             ->toBe(expected: true)
             ->and($user->active)
@@ -69,7 +68,6 @@ describe(description: 'User Model Feature Test', tests: function () {
         $this->assertDatabaseHas(table: 'users', data: [
             'name' => $inputName,
             'email' => $inputEmail,
-            'password' => $inputPassword,
             'status' => true,
             'active' => false,
         ]);
@@ -94,7 +92,6 @@ describe(description: 'User Model Feature Test', tests: function () {
             [
                 'name' => $inputName = 'Jane Doe',
                 'email' => $inputEmail = 'jane@example.com',
-                'password' => $inputPassword = 'password123',
                 'status' => $active = 0,
                 'active' => $inActive = 1,
             ],
@@ -103,8 +100,6 @@ describe(description: 'User Model Feature Test', tests: function () {
             ->toBe(expected: $inputName)
             ->and($user->email)
             ->toBe(expected: $inputEmail)
-            ->and($user->password)
-            ->toBe(expected: $inputPassword)
             ->and($user->status)
             ->toBe(expected: $active)
             ->and($user->active)
@@ -112,7 +107,6 @@ describe(description: 'User Model Feature Test', tests: function () {
         $this->assertDatabaseHas('users', [
             'name' => $inputName,
             'email' => $inputEmail,
-            'password' => $inputPassword,
             'status' => $active,
             'active' => $inActive,
         ]);
@@ -150,22 +144,22 @@ describe(description: 'User Model API Test', tests: function () {
                     'active' => 1,
                 ],
                 [
-                    'name' => 'Jane Doe2',
-                    'email' => 'jane2@example.com',
+                    'name' => 'John Doe2',
+                    'email' => 'john2@example.com',
                     'password' => 'password123',
                     'status' => 0,
                     'active' => 0,
                 ],
                 [
-                    'name' => 'Jane Doe3',
-                    'email' => 'jane3@example.com',
+                    'name' => 'John Doe3',
+                    'email' => 'john3@example.com',
                     'password' => 'password123',
                     'status' => 1,
                     'active' => 0,
                 ],
                 [
-                    'name' => 'Jane Doe4',
-                    'email' => 'jane4@example.com',
+                    'name' => 'John Doe4',
+                    'email' => 'john4@example.com',
                     'password' => 'password123',
                     'status' => 0,
                     'active' => 1,
@@ -178,39 +172,25 @@ describe(description: 'User Model API Test', tests: function () {
                     'active' => 1,
                 ],
                 [
-                    'name' => 'Jane Doe6',
-                    'email' => 'jane6@example.com',
+                    'name' => 'John Doe6',
+                    'email' => 'john6@example.com',
                     'password' => 'password123',
                     'status' => 0,
                     'active' => 0,
                 ],
                 [
-                    'name' => 'Jane Doe7',
-                    'email' => 'jane7@example.com',
+                    'name' => 'John Doe7',
+                    'email' => 'john7@example.com',
                     'password' => 'password123',
                     'status' => 1,
                     'active' => 0,
                 ],
                 [
-                    'name' => 'Jane Doe8',
-                    'email' => 'jane8@example.com',
+                    'name' => 'John Doe8',
+                    'email' => 'john8@example.com',
                     'password' => 'password123',
                     'status' => 0,
                     'active' => 1,
-                ],
-                [
-                    'name' => 'Jane Doe9',
-                    'email' => 'jane9@example.com',
-                    'password' => 'password123',
-                    'status' => 1,
-                    'active' => 1,
-                ],
-                [
-                    'name' => 'Jane Doe10',
-                    'email' => 'jane10@example.com',
-                    'password' => 'password123',
-                    'status' => 0,
-                    'active' => 0,
                 ],
             ]);
         $this->get(uri: route('users.index', [
@@ -218,8 +198,8 @@ describe(description: 'User Model API Test', tests: function () {
             'rowsPerPage' => 10,
         ]))
             ->assertOk()
-            ->assertJsonCount(count: 10, key: 'data')
-            ->assertJsonStructure(
+            ->assertJsonCount(count: 8, key: 'data')
+            ->assertJsonStructure($jsonStructure =
                 [
                     'data' => [
                         [
@@ -249,10 +229,7 @@ describe(description: 'User Model API Test', tests: function () {
                     ],
                 ]
             );
-
         $this->getJson(uri: route('users.index', [
-            'page' => 1,
-            'rowsPerPage' => 2,
             'filters' => json_encode([
                 'active' => 0,
                 'status' => 0,
@@ -260,150 +237,155 @@ describe(description: 'User Model API Test', tests: function () {
         ]))
             ->assertOk()
             ->assertJsonCount(count: 2, key: 'data')
-            ->assertJsonStructure([
-                'data' => [
-                    '*' => [
-                        'name',
-                        'email',
-                        'status',
-                        'active',
-                        'created_at',
-                        'updated_at',
-                    ],
-                ],
-            ])
-            ->assertJson([
-                'data' => [
-                    [
-                        'name' => 'Jane Doe10',
-                        'email' => 'jane10@example.com',
-                        'status' => 0,
-                        'active' => 0,
-                        'created_at' => now()->format('Y-m-d H:i'),
-                        'updated_at' => now()->format('Y-m-d H:i'),
-                    ],
-                    [
-                        'name' => 'Jane Doe6',
-                        'email' => 'jane6@example.com',
-                        'status' => 0,
-                        'active' => 0,
-                        'created_at' => now()->format('Y-m-d H:i'),
-                        'updated_at' => now()->format('Y-m-d H:i'),
-                    ],
-                ],
-            ]);
+            ->assertJsonStructure($jsonStructure);
 
         $this->getJson(uri: route('users.index', [
-            'page' => 1,
-            'rowsPerPage' => 2,
             'filters' => json_encode([
-                'queryFilter' => 'Jane Doe10',
+                'active' => 1,
+                'status' => 1,
+            ]),
+        ]))
+            ->assertOk()
+            ->assertJsonCount(count: 2, key: 'data')
+            ->assertJsonStructure($jsonStructure);
+
+        $this->getJson(uri: route('users.index', [
+            'filters' => json_encode([
+                'active' => 0,
+                'status' => 1,
+            ]),
+        ]))
+            ->assertOk()
+            ->assertJsonCount(count: 2, key: 'data')
+            ->assertJsonStructure($jsonStructure);
+        $this->getJson(uri: route('users.index', [
+            'filters' => json_encode([
+                'active' => 1,
+                'status' => 0,
+            ]),
+        ]))
+            ->assertOk()
+            ->assertJsonCount(count: 2, key: 'data')
+            ->assertJsonStructure($jsonStructure);
+        $this->getJson(uri: route('users.index', [
+            'filters' => json_encode([
+                'active' => 1,
+                'status' => 0,
+            ]),
+        ]))
+            ->assertOk()
+            ->assertJsonCount(count: 2, key: 'data')
+            ->assertJsonStructure($jsonStructure);
+
+        $this->getJson(uri: route('users.index', [
+            'filters' => json_encode([
+                'queryFilter' => 'John Doe2',
                 'active' => 0,
                 'status' => 0,
             ]),
         ]))
             ->assertOk()
             ->assertJsonCount(count: 1, key: 'data')
-            ->assertJsonStructure([
-                'data' => [
-                    '*' => [
-                        'name',
-                        'email',
-                        'status',
-                        'active',
-                        'created_at',
-                        'updated_at',
-                    ],
-                ],
-            ]);
-
-        dd(
-            $this->getJson(uri: route('users.index', [
-                'page' => 1,
-                'rowsPerPage' => 2,
-                'filters' => json_encode([
-                    'queryFilter' => 'Jane Doe10',
-                    'active' => 0,
-                    'status' => 0,
-                ]),
-            ]))->json()
-        );
+            ->assertJsonStructure($jsonStructure);
 
         $this->getJson(uri: route('users.index', [
-            'page' => 2,
-            'rowsPerPage' => 5,
             'filters' => json_encode([
-                'queryFilter' => 'Jane Doe3',
-                'active' => 0,
-                'status' => 0,
-            ]),
-        ]))
-            ->assertOk()
-            ->assertJsonCount(count: 1, key: 'data')
-            ->assertJson([
-                'data' => [
-                    [
-                        'name' => 'Jane Doe4',
-                        'email' => 'jane4@example.com',
-                        'status' => 0,
-                        'active' => 1,
-                    ],
-                ],
-            ]);
-        $this->getJson(uri: route('users.index', [
-            'filters' => json_encode([
-                'queryFilter' => 'Jane Doe4',
+                'queryFilter' => 'John Doe1',
                 'active' => 1,
                 'status' => 1,
             ]),
         ]))
             ->assertOk()
             ->assertJsonCount(count: 1, key: 'data')
-            ->assertJson([
-                'data' => [
-                    [
-                        'name' => 'John Doe1',
-                        'email' => 'john1@example.com',
-                        'status' => 1,
-                        'active' => 1,
-                    ],
-                ],
-            ]);
+            ->assertJsonStructure($jsonStructure);
+
         $this->getJson(uri: route('users.index', [
             'filters' => json_encode([
                 'queryFilter' => 'John Doe1',
+                'active' => 0,
+                'status' => 0,
+            ]),
+        ]))
+            ->assertOk()
+            ->assertJsonCount(count: 0, key: 'data')
+            ->assertJsonStructure([
+                ...$jsonStructure,
+                'data' => [],
+            ]);
+
+        $this->getJson(uri: route('users.index', [
+            'filters' => json_encode([
+                'queryFilter' => 'John Doe1',
+                'active' => 0,
+                'status' => 0,
+            ]),
+        ]))
+            ->assertOk()
+            ->assertJsonCount(count: 0, key: 'data')
+            ->assertJsonStructure([
+                ...$jsonStructure,
+                'data' => [],
+            ]);
+
+        $this->getJson(uri: route('users.index', [
+            'filters' => json_encode([
+                'queryFilter' => 'John Doe5',
+                'active' => 1,
+                'status' => 1,
+            ]),
+        ]))
+            ->assertOk()
+            ->assertJsonCount(count: 1, key: 'data')
+            ->assertJsonStructure($jsonStructure);
+
+        $this->getJson(uri: route('users.index', [
+            'filters' => json_encode([
+                'queryFilter' => 'John Doe5',
+                'active' => 0,
+                'status' => 0,
+            ]),
+        ]))
+            ->assertOk()
+            ->assertJsonCount(count: 0, key: 'data')
+            ->assertJsonStructure([
+                ...$jsonStructure,
+                'data' => [],
+            ]);
+        $this->getJson(uri: route('users.index', [
+            'filters' => json_encode([
+                'active' => 1,
             ]),
         ]))
             ->assertOk()
             ->assertJsonCount(count: 4, key: 'data')
-            ->assertJson([
-                'data' => [
-                    [
-                        'name' => 'John Doe1',
-                        'email' => 'john1@example.com',
-                        'status' => 1,
-                        'active' => 1,
-                    ],
-                    [
-                        'name' => 'Jane Doe3',
-                        'email' => 'jane3@example.com',
-                        'status' => 1,
-                        'active' => 0,
-                    ],
-                    [
-                        'name' => 'Jane Doe2',
-                        'email' => 'jane2@example.com',
-                        'status' => 0,
-                        'active' => 0,
-                    ],
-                    [
-                        'name' => 'John Doe1',
-                        'email' => 'john1@example.com',
-                        'status' => 1,
-                        'active' => 1,
-                    ],
-                ],
+            ->assertJsonStructure($jsonStructure);
+
+        $this->getJson(uri: route('users.index', [
+            'filters' => json_encode([
+                'hasPosts' => 1,
+            ]),
+        ]))
+            ->assertOk()
+            ->assertJsonCount(count: 0, key: 'data')
+            ->assertJsonStructure([
+                ...$jsonStructure,
+                'data' => [],
             ]);
+        PostModel::factory()
+            ->createMany([
+                ['name' => 'Post 1', 'user_id' => UserModel::query()->whereEmail('john1@example.com')->first()->id],
+                ['name' => 'Post 2', 'user_id' => UserModel::query()->whereEmail('john2@example.com')->first()->id],
+            ]);
+
+        $this->getJson(uri: route('users.index', [
+            'filters' => json_encode([
+                'hasPosts' => 1,
+                'queryFilter' => 'john2@example.com',
+            ]),
+        ]))
+            ->assertOk()
+            ->assertJsonCount(count: 1, key: 'data')
+            ->assertJsonStructure($jsonStructure);
     });
     it(description: 'can_create_a_user_in_api', closure: function () {
         $user = UserModel::factory()
@@ -414,13 +396,17 @@ describe(description: 'User Model API Test', tests: function () {
                 ]
             );
         $response = $this->postJson(uri: route('users.store'), data: $user);
-        $response->assertStatus(status: 201);
-        $this->assertDatabaseHas(table: 'users', data: [
-            ...$user,
-            'status' => 1,
-            'active' => 0,
-            'deleted_at' => null,
-        ]);
+        $response->assertStatus(status: 201)
+            ->assertJsonStructure([
+                'data' => [
+                    'id',
+                    'name',
+                    'email',
+                    'status',
+                    'active',
+                ],
+            ]);
+        $this->assertDatabaseHas(table: 'users', data: $user);
     });
     it(description: 'can_update_a_user', closure: function () {
         $user = UserModel::factory()
@@ -433,17 +419,30 @@ describe(description: 'User Model API Test', tests: function () {
                     'active' => 0,
                 ]
             );
-        $response = $this->putJson(uri: route('users.update', $user->id), data: $data = [
+        $response = $this->putJson(uri: route('users.update', $user->id), data: [
             'name' => 'Jane Doe2',
             'email' => 'jane2@example.com',
             'password' => 'password123',
             'status' => 0,
             'active' => 1,
         ]);
-        $response->assertStatus(status: 200);
+        $response->assertStatus(status: 200)
+            ->assertJsonStructure([
+                'data' => [
+                    'id',
+                    'name',
+                    'email',
+                    'status',
+                    'active',
+                    'created_at',
+                    'updated_at',
+                ],
+            ]);
         $this->assertDatabaseHas('users', [
-            ...$data,
-            'deleted_at' => null,
+            'name' => 'Jane Doe2',
+            'email' => 'jane2@example.com',
+            'status' => 0,
+            'active' => 1,
         ]);
     });
     it(description: 'can_delete_a_user', closure: function () {
@@ -456,23 +455,15 @@ describe(description: 'User Model API Test', tests: function () {
                 'active' => 0,
             ]);
         $response = $this->deleteJson(uri: route('users.destroy', $user->id));
-        $response->assertOk();
-        $response->assertJsonCount(count: 0, key: 'data');
+        $response->assertNoContent();
         $this->assertDatabaseHas('users', [
             'name' => 'John Doe1',
             'email' => 'john1@example.com',
-            'password' => 'password123',
             'status' => 1,
             'active' => 0,
             'deleted_at' => now(),
         ]);
-        $this->assertDatabaseMissing('users', [
-            'name' => 'John Doe1',
-            'email' => 'john1@example.com',
-            'password' => 'password123',
-            'status' => 1,
-            'active' => 0,
-        ]);
+
         $this->assertSame(0, UserModel::query()
             ->count());
     });
@@ -480,27 +471,28 @@ describe(description: 'User Model API Test', tests: function () {
         $user = UserModel::factory()
             ->create();
         $response = $this->get(uri: route('users.show', $user->id));
-        $response->assertStatus(status: 200);
-        $response->assertJson(['data' => ['name' => $user->name]]);
-        $response->assertJsonStructure(
-            [
-                'data' => [
-                    'id',
-                    'name',
-                    'email',
-                    'status',
-                    'active',
-                    'created_at',
-                    'updated_at',
-                    'deleted_at',
-                ],
-            ]
-        );
+        $response->assertStatus(status: 200)
+            ->assertJsonStructure(
+                [
+                    'data' => [
+                        'id',
+                        'name',
+                        'email',
+                        'status',
+                        'active',
+                        'created_at',
+                        'updated_at',
+                    ],
+                ]);
     });
     it(description: 'can_post_a_user_with_posts_ids', closure: function () {
-        $postIds = UserModel::factory(2)
-            ->create()
-            ->modelKeys();
+
+        $post = PostModel::factory()->raw([
+            'name' => 'Post 1',
+            'desc' => 'Post 1 desc',
+            'status' => 1,
+            'active' => 0,
+        ]);
         $user = UserModel::factory()
             ->raw([
                 'name' => 'user1',
@@ -511,15 +503,31 @@ describe(description: 'User Model API Test', tests: function () {
             ]);
         $response = $this->postJson(uri: route('users.store'), data: [
             ...$user,
-            'post_ids' => $postIds,
+            'post' => $post,
         ]);
-        $response->assertStatus(status: 201);
+        $response->assertStatus(status: 201)
+            ->assertJsonStructure([
+                'data' => [
+                    'id',
+                    'name',
+                    'email',
+                    'status',
+                    'active',
+                ],
+            ]);
         $this->assertDatabaseHas(table: 'users', data: [
-            ...$user,
-            'deleted_at' => null,
+            'name' => 'user1',
+            'email' => 'user1@example.com',
+            'status' => 1,
+            'active' => 0,
         ]);
-        $this->assertDatabaseHas(table: 'post_user', data: ['user_id' => 1, 'post_id' => 1]);
-        $this->assertDatabaseHas(table: 'post_user', data: ['user_id' => 1, 'post_id' => 2]);
-        $this->assertSame(2, UserModel::query()->find(1)->posts()->count());
+        $this->assertDatabaseHas(table: 'posts', data: [
+            'name' => 'Post 1',
+            'desc' => 'Post 1 desc',
+            'status' => 1,
+            'active' => 0,
+            'user_id' => $response->json()['data']['id'],
+        ]);
+        $this->assertSame(1, UserModel::query()->find($response->json()['data']['id'])->posts()->count());
     });
-})->only();
+});

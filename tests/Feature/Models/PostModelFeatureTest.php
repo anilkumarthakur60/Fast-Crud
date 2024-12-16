@@ -108,7 +108,7 @@ describe(description: 'Testing_Tag_Model_Factory', tests: function () {
             'deleted_at' => null,
         ]);
     });
-})->skip();
+});
 describe(description: 'test_tag_controller', tests: function () {
     it(description: 'can_get_all_tags', closure: function () {
         TagModel::factory()
