@@ -265,13 +265,15 @@ if (! function_exists('getColumns')) {
     }
 }
 
-if (! function_exists('describe')) {
+if (! function_exists('describe') && version_compare(app()->version(), '10.0.0', '<')) {
     /**
      * Adds the given closure as a group of tests. The first argument
      * is the group description; the second argument is a closure
      * that contains the group tests.
      *
-     * @return HigherOrderTapProxy<Expectable|TestCall|TestCase>|Expectable|TestCall|TestCase|mixed
+     * @param string $description
+     * @param Closure $tests
+     * @return DescribeCall
      */
     function describe(string $description, Closure $tests): DescribeCall
     {
