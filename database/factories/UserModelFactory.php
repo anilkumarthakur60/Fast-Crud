@@ -25,11 +25,11 @@ class UserModelFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->name(),
-            'email' => $this->faker->unique()->safeEmail(),
+            'name'     => $this->faker->name(),
+            'email'    => $this->faker->unique()->safeEmail(),
             'password' => bcrypt('password123'),
-            'status' => $this->faker->boolean(),
-            'active' => $this->faker->boolean(),
+            'status'   => $this->faker->boolean(),
+            'active'   => $this->faker->boolean(),
         ];
     }
 }
