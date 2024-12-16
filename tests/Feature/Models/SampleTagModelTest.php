@@ -13,9 +13,9 @@ function assertTagInDatabase(array $attributes): void
     test()->assertDatabaseHas('tags', [...$attributes, 'deleted_at' => null]);
 }
 
-describe('Tag Model API', function () {
-    describe('CRUD Operations', function () {
-        it('creates a tag', function () {
+describe('tag_model_api', function () {
+    describe('crud_operations', function () {
+        it('creates_a_tag', function () {
             $attributes = [
                 'name'   => 'Tag 1',
                 'desc'   => 'Tag 1 Description',
@@ -29,7 +29,7 @@ describe('Tag Model API', function () {
             assertTagInDatabase($attributes);
         });
 
-        it('updates a tag', function () {
+        it('updates_a_tag', function () {
             $tag = createTag([
                 'name'   => 'Tag 1',
                 'desc'   => 'Tag 1 Description',
@@ -50,14 +50,14 @@ describe('Tag Model API', function () {
             assertTagInDatabase($updatedAttributes);
         });
 
-        it('soft deletes a tag', function () {
+        it('soft_deletes_a_tag', function () {
             $tag = createTag(['name' => 'Tag 1']);
             $tag->delete();
 
             test()->assertSoftDeleted('tags', ['id' => $tag->id]);
         });
 
-        it('force deletes a tag', function () {
+        it('force_deletes_a_tag', function () {
             $tag = createTag(['name' => 'Tag 1']);
             $tag->forceDelete();
 
@@ -65,8 +65,8 @@ describe('Tag Model API', function () {
         });
     });
 
-    describe('Tag API Endpoints', function () {
-        it('retrieves all tags', function () {
+    describe('tag_api_endpoints', function () {
+        it('retrieves_all_tags', function () {
             TagModel::factory()->createMany([
                 ['name' => 'Tag 1', 'desc' => 'Tag 1 Description', 'status' => 1, 'active' => 1],
                 ['name' => 'Tag 2', 'desc' => 'Tag 2 Description', 'status' => 0, 'active' => 0],
@@ -78,7 +78,7 @@ describe('Tag Model API', function () {
                 ->assertJsonStructure(['data', 'links', 'meta']);
         });
 
-        it('filters tags by query', function () {
+        it('filters_tags_by_query', function () {
             createTag(['name' => 'Tag 1', 'status' => 1, 'active' => 1]);
             createTag(['name' => 'Tag 2', 'status' => 0, 'active' => 0]);
 
@@ -90,7 +90,7 @@ describe('Tag Model API', function () {
                 ->assertJsonFragment(['name' => 'Tag 2']);
         });
 
-        it('creates a tag via API', function () {
+        it('creates_a_tag_via_api', function () {
             $attributes = [
                 'name'   => 'Tag 1',
                 'desc'   => 'Tag 1 Description',
@@ -104,7 +104,7 @@ describe('Tag Model API', function () {
             assertTagInDatabase($attributes);
         });
 
-        it('validates tag name during creation', function () {
+        it('validates_tag_name_during_creation', function () {
             $longName = str_repeat('A', 256);
 
             test()->postJson('tags', ['name' => $longName])
@@ -112,7 +112,7 @@ describe('Tag Model API', function () {
                 ->assertJsonValidationErrors(['name']);
         });
 
-        it('updates a tag via API', function () {
+        it('updates_a_tag_via_api', function () {
             $tag = createTag([
                 'name'   => 'Tag 1',
                 'desc'   => 'Tag 1 Description',
@@ -133,7 +133,7 @@ describe('Tag Model API', function () {
             assertTagInDatabase($updatedAttributes);
         });
 
-        it('deletes a tag via API', function () {
+        it('deletes_a_tag_via_api', function () {
             $tag = createTag(['name' => 'Tag 1']);
 
             test()->deleteJson("tags/{$tag->id}")

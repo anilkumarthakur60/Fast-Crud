@@ -5,12 +5,12 @@ use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Support\Facades\Schema;
 
-describe(description: 'Post Model Class Test', tests: function () {
+describe(description: 'post_model_class_test', tests: function () {
     beforeEach(function () {
         $this->postModel = new PostModel();
     });
 
-    it(description: 'it should have correct fillable attributes', closure: function () {
+    it(description: 'it_should_have_correct_fillable_attributes', closure: function () {
         $fillableKeys = array_keys($this->postModel->getFillable());
         sort($fillableKeys);
         $expectedKeys = array_keys([
@@ -27,24 +27,24 @@ describe(description: 'Post Model Class Test', tests: function () {
             ->toBe($expectedKeys);
     });
 
-    it(description: 'it should have correct table name', closure: function () {
+    it(description: 'it_should_have_correct_table_name', closure: function () {
         expect($this->postModel->getTable())
             ->toBe('posts');
     });
 
-    it(description: 'it should have correct primary key', closure: function () {
+    it(description: 'it_should_have_correct_primary_key', closure: function () {
         expect($this->postModel->getKeyName())
             ->toBe('id');
     });
 
-    it(description: 'it should have correct timestamps', closure: function () {
+    it(description: 'it_should_have_correct_timestamps', closure: function () {
         expect($this->postModel->getCreatedAtColumn())
             ->toBe('created_at')
             ->and($this->postModel->getUpdatedAtColumn())
             ->toBe('updated_at');
     });
 
-    it(description: 'it should have correct columns', closure: function () {
+    it(description: 'it_should_have_correct_columns', closure: function () {
         $columns = Schema::getColumnListing($this->postModel->getTable());
         sort($columns);
         $expectedColumns = [
@@ -62,12 +62,12 @@ describe(description: 'Post Model Class Test', tests: function () {
         expect($columns)->toBe($expectedColumns);
     });
 
-    it(description: 'should have all the method defined in the model', closure: function () {
+    it(description: 'should_have_all_the_method_defined_in_the_model', closure: function () {
         expect(method_exists($this->postModel, 'user'))->toBeTrue()
             ->and(method_exists($this->postModel, 'tags'))->toBeTrue();
     });
 
-    it(description: 'should create a post and associate tags', closure: function () {
+    it(description: 'should_create_a_post_and_associate_tags', closure: function () {
         $this->postModel->name = 'Test Post';
         $this->postModel->desc = 'Test Description';
         $this->postModel->status = 1;
@@ -81,7 +81,7 @@ describe(description: 'Post Model Class Test', tests: function () {
         expect($this->postModel->tags()->count())->toBe(2);
     });
 
-    it(description: 'should update a post and sync tags', closure: function () {
+    it(description: 'should_update_a_post_and_sync_tags', closure: function () {
         $this->postModel->name = 'Test Post';
         $this->postModel->desc = 'Test Description';
         $this->postModel->status = 1;

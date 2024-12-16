@@ -4,11 +4,11 @@ use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Illuminate\Support\Facades\Schema;
 
-describe(description: 'Tag Model Class Test1', tests: function () {
+describe(description: 'tag_model_class_test1', tests: function () {
     beforeEach(function () {
         $this->tagModel = new TagModel();
     });
-    it(description: 'it should have correct fillable attributes', closure: function () {
+    it(description: 'it_should_have_correct_fillable_attributes', closure: function () {
         $fillableKeys = array_keys($this->tagModel->getFillable());
         sort($fillableKeys);
         $expectedKeys = array_keys([
@@ -23,22 +23,22 @@ describe(description: 'Tag Model Class Test1', tests: function () {
             ->and($fillableKeys)
             ->toBe($expectedKeys);
     });
-    it(description: 'it should have correct table name', closure: function () {
+    it(description: 'it_should_have_correct_table_name', closure: function () {
         expect($this->tagModel->getTable())
             ->toBe('tags');
     });
-    it(description: 'it should have correct primary key', closure: function () {
+    it(description: 'it_should_have_correct_primary_key', closure: function () {
         expect($this->tagModel->getKeyName())
             ->toBe('id');
     });
 
-    it(description: 'it should have correct timestamps', closure: function () {
+    it(description: 'it_should_have_correct_timestamps', closure: function () {
         expect($this->tagModel->getCreatedAtColumn())
             ->toBe('created_at')
             ->and($this->tagModel->getUpdatedAtColumn())
             ->toBe('updated_at');
     });
-    it(description: 'it should have correct columns', closure: function () {
+    it(description: 'it_should_have_correct_columns', closure: function () {
         $columns = Schema::getColumnListing($this->tagModel->getTable());
         sort($columns);
         $expectedColumns = [
@@ -55,7 +55,7 @@ describe(description: 'Tag Model Class Test1', tests: function () {
         expect($columns)->toBe($expectedColumns);
     });
 
-    it(description: 'should have all the method defined in the model', closure: function () {
+    it(description: 'should_have_all_the_method_defined_in_the_model', closure: function () {
         expect(method_exists($this->tagModel, 'afterCreateProcess'))->toBeTrue()
             ->and(method_exists($this->tagModel, 'afterUpdateProcess'))->toBeTrue()
             ->and(method_exists($this->tagModel, 'posts'))->toBeTrue()
@@ -64,7 +64,7 @@ describe(description: 'Tag Model Class Test1', tests: function () {
             ->and(method_exists($this->tagModel, 'scopeStatus'))->toBeTrue();
     });
 
-    it(description: 'should sync posts after creating a tag', closure: function () {
+    it(description: 'should_sync_posts_after_creating_a_tag', closure: function () {
         $this->tagModel->name = 'Test Tag';
         $this->tagModel->desc = 'Test Description';
         $this->tagModel->status = 1;
@@ -79,7 +79,7 @@ describe(description: 'Tag Model Class Test1', tests: function () {
         expect($this->tagModel->posts()->count())->toBe(2);
     });
 
-    it(description: 'should sync posts after updating a tag', closure: function () {
+    it(description: 'should_sync_posts_after_updating_a_tag', closure: function () {
         $this->tagModel->name = 'Test Tag';
         $this->tagModel->desc = 'Test Description';
         $this->tagModel->status = 1;

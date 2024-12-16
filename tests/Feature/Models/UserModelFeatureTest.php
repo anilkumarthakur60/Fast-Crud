@@ -3,7 +3,7 @@
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 
-describe(description: 'User Model Feature Test', tests: function () {
+describe(description: 'user_model_feature_test', tests: function () {
     it('can create a user', function () {
         $userData = [
             'name'     => 'John Doe',
@@ -132,7 +132,7 @@ describe(description: 'User Model Feature Test', tests: function () {
         ]);
     });
 });
-describe(description: 'User Model API Test', tests: function () {
+describe(description: 'user_model_api_test', tests: function () {
     it(description: 'can_get_all_users', closure: function () {
         UserModel::factory()
             ->createMany([
