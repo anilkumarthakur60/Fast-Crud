@@ -243,7 +243,7 @@ describe(description: 'test_post_controller', tests: function () {
         );
     });
     it(description: 'can_post_a_post_with_tags_ids', closure: function () {
-        $permission = Permission::create(['name' => 'post-create']);
+        $permission = Permission::create(['name' => 'post-create','guard_name' => 'web1']);
         $this->user->givePermissionTo($permission);
         $tagIds = TagModel::factory(2)
             ->create()
