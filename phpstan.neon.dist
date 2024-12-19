@@ -4,9 +4,11 @@ includes:
 
 parameters:
 
+    treatPhpDocTypesAsCertain: false
     paths:
         - src/
         - database/
+        - tests/TestSetup/
     level: 9
 
     excludePaths:

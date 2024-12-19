@@ -4,7 +4,6 @@ use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 
-/** @test*/
 describe(description: 'testing_post_model_factory', tests: function () {
 
     beforeEach(function () {
@@ -169,7 +168,7 @@ describe(description: 'test_post_controller', tests: function () {
                     'status' => 1,
                     'active' => 0,
                     'user_id' => $this->user->id,
-                    'description' => 'Post 1 Description',
+                    'desc' => 'Post 1 Description',
                 ]
             );
         $response = $this->postJson(uri: 'posts', data: $post);
@@ -195,6 +194,7 @@ describe(description: 'test_post_controller', tests: function () {
             'desc' => 'Post 2 Description',
             'status' => 0,
             'active' => 1,
+            'user_id' => $this->user->id,
         ]);
         $response->assertStatus(status: 200);
         $this->assertDatabaseHas('posts', [
@@ -227,11 +227,11 @@ describe(description: 'test_post_controller', tests: function () {
                     'id',
                     'name',
                     'desc',
+                    'user_id',
                     'status',
                     'active',
                     'created_at',
                     'updated_at',
-                    'deleted_at',
                 ],
             ]
         );
@@ -257,8 +257,8 @@ describe(description: 'test_post_controller', tests: function () {
             ...$post,
             'deleted_at' => null,
         ]);
-        test()->assertDatabaseHas(table: 'post_tag', data: ['post_id' => 1, 'tag_id' => 1]);
-        test()->assertDatabaseHas(table: 'post_tag', data: ['post_id' => 1, 'tag_id' => 2]);
+        test()->assertDatabaseHas(table: 'post_tag', data: ['post_id' => $response->json('data.id'), 'tag_id' => $tagIds[0]]);
+        test()->assertDatabaseHas(table: 'post_tag', data: ['post_id' => $response->json('data.id'), 'tag_id' => $tagIds[1]]);
         test()->assertSame(2, PostModel::query()->find(1)->tags()->count());
     });
-})->only();
+});

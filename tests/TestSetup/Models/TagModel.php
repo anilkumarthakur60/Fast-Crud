@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @method static Builder<TagModel> initializer()
+ * @method static Builder<TagModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
+ *
+ * @mixin Builder<TagModel>
+ */
 class TagModel extends Model
 {
     /** @use HasFactory<TagModelFactory> */

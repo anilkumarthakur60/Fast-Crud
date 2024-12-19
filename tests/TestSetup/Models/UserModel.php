@@ -2,6 +2,7 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
+use Anil\FastApiCrud\Database\Factories\UserModelFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,6 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Request;
 
+/**
+ * @method static Builder<UserModel> initializer()
+ * @method static Builder<UserModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
+ *
+ * @mixin Builder<UserModel>
+ */
 class UserModel extends Model
 {
     /** @use HasFactory<UserModelFactory> */
@@ -88,6 +95,7 @@ class UserModel extends Model
     {
         $request = Request::instance();
         if ($request->has('post')) {
+            /** @var array<string, mixed> $postData */
             $postData = $request->input('post');
             $this->posts()->create([
                 'name' => $postData['name'],

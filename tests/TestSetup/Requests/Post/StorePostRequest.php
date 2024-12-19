@@ -19,7 +19,7 @@ class StorePostRequest extends FormRequest
                 'string',
                 'max:255',
             ],
-            'description' => [
+            'desc' => [
                 'required',
                 'string',
                 'max:25500',
@@ -28,6 +28,14 @@ class StorePostRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:users,id',
+            ],
+            'status' => [
+                'required',
+                'boolean',
+            ],
+            'active' => [
+                'required',
+                'boolean',
             ],
         ];
     }

@@ -213,17 +213,15 @@ class CrudBaseController extends BaseController
      */
     protected function setupPermissions(): void
     {
-        $constants = new ReflectionClass($this->model);
-        $permissionSlug = $constants->getConstant('permissionSlug');
+        //         $constants = new ReflectionClass($this->model);
+        //         $permissionSlug = $constants->getMethod('permissionSlug');
 
-        if ($permissionSlug !== null) {
-            if (! is_string($permissionSlug)) {
-                throw new Exception('permissionSlug must be a string.', ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
-            }
-            $this->middleware('permission:view-'.$permissionSlug)->only(['index', 'show']);
-            $this->middleware('permission:alter-'.$permissionSlug)->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
-            $this->middleware('permission:delete-'.$permissionSlug)->only(['delete']);
-        }
+        //         if ($permissionSlug) {
+        // //       _dd($permissionSlug);
+        //             $this->middleware('permission:view-'.$permissionSlug)->only(['index', 'show']);
+        //             $this->middleware('permission:alter-'.$permissionSlug)->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
+        //             $this->middleware('permission:delete-'.$permissionSlug)->only(['delete']);
+        //         }
     }
 
     /**
@@ -383,10 +381,10 @@ class CrudBaseController extends BaseController
 
     /**
      * Find model by ID with optional scopes.
-     * @param int|string $id
-     * @param array<string> $scopes
-     * @param array<string, mixed> $scopeWithValue
-     * @return Model
+     *
+     * @param  array<string>  $scopes
+     * @param  array<string, mixed>  $scopeWithValue
+     *
      * @throws Exception
      */
     protected function findModel(int|string $id, array $scopes = [], array $scopeWithValue = []): Model

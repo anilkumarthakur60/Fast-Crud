@@ -3,12 +3,19 @@
 namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
 use Anil\FastApiCrud\Database\Factories\PostModelFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @method static Builder<PostModel> initializer()
+ * @method static Builder<PostModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
+ *
+ * @mixin Builder<PostModel>
+ */
 class PostModel extends Model
 {
     /** @use HasFactory<PostModelFactory> */
@@ -19,11 +26,11 @@ class PostModel extends Model
     protected $table = 'posts';
 
     protected $fillable = [
-        'name',
-        'desc',
-        'user_id',
-        'status',
         'active',
+        'desc',
+        'name',
+        'status',
+        'user_id',
     ];
 
     /**
@@ -57,5 +64,21 @@ class PostModel extends Model
             parentKey: 'id',
             relatedKey: 'id'
         );
+    }
+
+    public function afterCreateProcess(): void
+    {
+        $request = request();
+        if ($request->filled('tag_ids')) {
+            $this->tags()->sync((array) $request->input('tag_ids'));
+        }
+    }
+
+    public function afterUpdateProcess(): void
+    {
+        $request = request();
+        if ($request->filled('tag_ids')) {
+            $this->tags()->sync((array) $request->input('tag_ids'));
+        }
     }
 }
