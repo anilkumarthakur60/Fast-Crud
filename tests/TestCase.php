@@ -43,9 +43,24 @@ abstract class TestCase extends OrchestraTestCase
         );
         /** @var Application $app */
         $app = $this->app;
+        $app['config']->set('auth.guards.web1', [
+            'driver' => 'session',
+            'provider' => 'users',
+        ]);
+
+        $app['config']->set('auth.providers.users', [
+            'driver' => 'eloquent',
+            'model' => UserModel::class,
+        ]);
+        // Clear permission cache
+        // $this->artisan('permission:cache-reset');
+        // app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
         $app['config']->set('permission.models.permission', Permission::class);
         $app['config']->set('permission.models.role', Role::class);
         $app['config']->set('permission.cache.key', 'spatie.permission.cache');
+        $app['config']->set('auth.defaults.guard', 'web1');
+        $app['config']->set('permission.guard_name', 'web1');
         $this->setUpDatabase();
         $this->setupMiddleware();
     }
@@ -217,6 +232,8 @@ abstract class TestCase extends OrchestraTestCase
 
             $table->primary([$pivotPermission, $pivotRole], 'role_has_permissions_permission_id_role_id_primary');
         });
+
+        getColumns('role_has_permissions');
 
     }
 

@@ -108,7 +108,7 @@ describe(description: 'test_post_controller', tests: function () {
     beforeEach(function () {
         $this->user = UserModel::factory()->create();
         $this->actingAs($this->user);
-        $permission = Permission::create(['name' => 'post-create']);
+        $permission = Permission::create(['name' => 'post-create', 'guard_name' => 'web1']);
         $this->user->givePermissionTo($permission);
         dd($this->user->permissions);
     });
