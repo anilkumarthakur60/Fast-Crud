@@ -218,6 +218,7 @@ class CrudBaseController extends BaseController
             $permissionSlug = $model->getPermissionSlug();
         }
         if ($permissionSlug) {
+            dd($permissionSlug);
             $this->middleware('permission:view-'.$permissionSlug)->only(['index', 'show']);
             $this->middleware('permission:alter-'.$permissionSlug)->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
             $this->middleware('permission:delete-'.$permissionSlug)->only(['delete']);
