@@ -19,10 +19,16 @@ use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 abstract class TestCase extends OrchestraTestCase
 {
     use DatabaseMigrations;
+
+    protected Permission $testClientPermission;
+
+    protected Role $testClientRole;
 
     /**
      * @throws BindingResolutionException
@@ -30,12 +36,17 @@ abstract class TestCase extends OrchestraTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->setUpDatabase();
         Factory::guessFactoryNamesUsing(
             function (string $modelName): string {
                 return 'Anil\FastApiCrud\\Database\\Factories\\'.class_basename($modelName).'Factory';
             }
         );
+        /** @var Application $app */
+        $app = $this->app;
+        $app['config']->set('permission.models.permission', Permission::class);
+        $app['config']->set('permission.models.role', Role::class);
+        $app['config']->set('permission.cache.key', 'spatie.permission.cache');
+        $this->setUpDatabase();
         $this->setupMiddleware();
     }
 
@@ -214,8 +225,9 @@ abstract class TestCase extends OrchestraTestCase
      */
     private function setupMiddleware(): void
     {
-
-        $router = $this->app->make(Router::class);
+        /** @var Application $app */
+        $app = $this->app;
+        $router = $app->make(Router::class);
         $router->aliasMiddleware('role', RoleMiddleware::class);
         $router->aliasMiddleware('permission', PermissionMiddleware::class);
         $router->aliasMiddleware('role_or_permission', RoleOrPermissionMiddleware::class);

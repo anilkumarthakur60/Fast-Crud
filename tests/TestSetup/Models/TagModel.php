@@ -21,7 +21,6 @@ use Illuminate\Support\Carbon;
  * @property-read Carbon $deleted_at
  *
  * @method static Builder<TagModel> initializer()
- * @method static Builder<TagModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
  *
  * @mixin Builder<TagModel>
  */
