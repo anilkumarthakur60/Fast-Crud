@@ -20,11 +20,11 @@ class UserResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'         => $this['id'],
-            'name'       => $this['name'],
-            'email'      => $this['email'],
-            'status'     => $this['status'],
-            'active'     => $this['active'],
+            'id' => $this['id'],
+            'name' => $this['name'],
+            'email' => $this['email'],
+            'status' => $this['status'],
+            'active' => $this['active'],
             'created_at' => Carbon::parse($this['created_at'])->format('Y-m-d H:i'),
             'updated_at' => Carbon::parse($this['updated_at'])->format('Y-m-d H:i'),
         ];

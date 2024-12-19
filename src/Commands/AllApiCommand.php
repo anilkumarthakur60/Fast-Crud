@@ -14,7 +14,7 @@ class AllApiCommand extends Command
     public function handle(): void
     {
         $name = $this->argument('name');
-        if (empty($name) || !is_string($name)) {
+        if (empty($name) || ! is_string($name)) {
             $this->error('Please provide a valid name for the model.');
 
             return;

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 describe(description: 'user_model_class_unit_test', tests: function () {
     beforeEach(function () {
-        $this->userModel = new UserModel();
+        $this->userModel = new UserModel;
     });
 
     it(description: 'it_should_have_correct_fillable_attributes', closure: function () {

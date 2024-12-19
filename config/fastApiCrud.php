@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'applyPermission'  => (bool) env('FAST_API_CRUD_APPLY_PERMISSION', true),
-    'with_interface'   => true,
+    'applyPermission' => (bool) env('FAST_API_CRUD_APPLY_PERMISSION', true),
+    'with_interface' => true,
     'rowsPerPageRules' => [
         'rowsPerPage' => 'nullable|numeric|gte:0|lte:100',
     ],

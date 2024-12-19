@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 describe(description: 'tag_model_class_test1', tests: function () {
     beforeEach(function () {
-        $this->tagModel = new TagModel();
+        $this->tagModel = new TagModel;
     });
     it(description: 'it_should_have_correct_fillable_attributes', closure: function () {
         $fillableKeys = array_keys($this->tagModel->getFillable());

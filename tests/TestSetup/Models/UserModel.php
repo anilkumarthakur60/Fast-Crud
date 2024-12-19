@@ -46,8 +46,7 @@ class UserModel extends Model
     }
 
     /**
-     * @param Builder<UserModel> $query
-     *
+     * @param  Builder<UserModel>  $query
      * @return Builder<UserModel>
      */
     public function scopeQueryFilter(Builder $query, mixed $search): Builder
@@ -59,8 +58,7 @@ class UserModel extends Model
     }
 
     /**
-     * @param Builder<UserModel> $query
-     *
+     * @param  Builder<UserModel>  $query
      * @return Builder<UserModel>
      */
     public function scopeActive(Builder $query, int $active = 1): Builder
@@ -69,8 +67,7 @@ class UserModel extends Model
     }
 
     /**
-     * @param Builder<UserModel> $query
-     *
+     * @param  Builder<UserModel>  $query
      * @return Builder<UserModel>
      */
     public function scopeStatus(Builder $query, int $status = 1): Builder
@@ -79,8 +76,7 @@ class UserModel extends Model
     }
 
     /**
-     * @param Builder<UserModel> $query
-     *
+     * @param  Builder<UserModel>  $query
      * @return Builder<UserModel>
      */
     public function scopeHasPosts(Builder $query): Builder
@@ -94,8 +90,8 @@ class UserModel extends Model
         if ($request->has('post')) {
             $postData = $request->input('post');
             $this->posts()->create([
-                'name'   => $postData['name'],
-                'desc'   => $postData['desc'],
+                'name' => $postData['name'],
+                'desc' => $postData['desc'],
                 'status' => $postData['status'],
                 'active' => $postData['active'],
             ]);

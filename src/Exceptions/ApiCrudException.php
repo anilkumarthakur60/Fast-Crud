@@ -15,8 +15,8 @@ class ApiCrudException extends Exception
         return response()->json([
             'error' => [
                 'message' => $this->getMessage(),
-                'file'    => $this->getFile(),
-                'line'    => $this->getLine(),
+                'file' => $this->getFile(),
+                'line' => $this->getLine(),
 
             ],
         ], $this->getCode());

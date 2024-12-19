@@ -60,8 +60,7 @@ class TagModel extends Model
     }
 
     /**
-     * @param Builder<TagModel> $query
-     *
+     * @param  Builder<TagModel>  $query
      * @return Builder<TagModel>
      */
     public function scopeQueryFilter(Builder $query, mixed $search): Builder
@@ -73,8 +72,7 @@ class TagModel extends Model
     }
 
     /**
-     * @param Builder<TagModel> $query
-     *
+     * @param  Builder<TagModel>  $query
      * @return Builder<TagModel>
      */
     public function scopeActive(Builder $query, int $active = 1): Builder
@@ -83,8 +81,7 @@ class TagModel extends Model
     }
 
     /**
-     * @param Builder<TagModel> $query
-     *
+     * @param  Builder<TagModel>  $query
      * @return Builder<TagModel>
      */
     public function scopeStatus(Builder $query, int $status = 1): Builder
