@@ -9,35 +9,48 @@ use Anil\FastApiCrud\Tests\TestSetup\Controllers\UserController;
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Routing\Router;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
 abstract class TestCase extends OrchestraTestCase
 {
     use DatabaseMigrations;
 
+    /**
+     * @throws BindingResolutionException
+     */
     protected function setUp(): void
     {
         parent::setUp();
-        $this->setUpDatabase($this->app);
+        $this->setUpDatabase();
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'Anil\FastApiCrud\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            function (string $modelName): string {
+                return 'Anil\FastApiCrud\\Database\\Factories\\'.class_basename($modelName).'Factory';
+            }
         );
+        $this->setupMiddleware();
     }
 
-    protected function setUpDatabase(Application $app): void
+    protected function setUpDatabase(): void
     {
-        $this->userMigration($app);
-        $this->tagMigration($app);
-        $this->postMigration($app);
+        $this->userMigration();
+        $this->tagMigration();
+        $this->postMigration();
+        $this->permissionMigration();
     }
 
-    protected function userMigration(Application $app)
+    protected function userMigration(): void
     {
+        /** @var Application $app */
+        $app = $this->app;
         $app['db']->connection()
             ->getSchemaBuilder()
             ->create('users', function (Blueprint $table) {
@@ -54,8 +67,11 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
-    protected function tagMigration(Application $app)
+    protected function tagMigration(): void
     {
+
+        /** @var Application $app */
+        $app = $this->app;
         $app['db']->connection()
             ->getSchemaBuilder()
             ->create('tags', function (Blueprint $table) {
@@ -71,8 +87,10 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
-    protected function postMigration(Application $app)
+    protected function postMigration(): void
     {
+        /** @var Application $app */
+        $app = $this->app;
         $app['db']->connection()
             ->getSchemaBuilder()
             ->create('posts', function (Blueprint $table) {
@@ -100,6 +118,107 @@ abstract class TestCase extends OrchestraTestCase
                     ->constrained('tags')
                     ->cascadeOnDelete();
             });
+    }
+
+    protected function permissionMigration(): void
+    {
+        /** @var Application $app */
+        $app = $this->app;
+        $schemaBuilder = $app['db']->connection()->getSchemaBuilder();
+        $tableNames = [
+            'roles' => 'roles',
+            'permissions' => 'permissions',
+            'model_has_permissions' => 'model_has_permissions',
+            'model_has_roles' => 'model_has_roles',
+            'role_has_permissions' => 'role_has_permissions',
+        ];
+        $columnNames = [
+            'role_pivot_key' => 'role_id',
+            'permission_pivot_key' => 'permission_id',
+            'model_morph_key' => 'model_id',
+            'team_foreign_key' => 'team_id',
+        ];
+        $pivotRole = 'role_id';
+        $pivotPermission = 'permission_id';
+
+        $schemaBuilder->create($tableNames['permissions'], function (Blueprint $table) {
+            //$table->engine('InnoDB');
+            $table->bigIncrements('id'); // permission id
+            $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
+            $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
+            $table->string('group')->nullable();
+            $table->timestamps();
+
+            $table->unique(['name', 'guard_name']);
+        });
+
+        $schemaBuilder->create($tableNames['roles'], function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('name');
+            $table->string('guard_name');
+            $table->timestamps();
+            $table->unique(['name', 'guard_name']);
+        });
+
+        $schemaBuilder->create($tableNames['model_has_permissions'], function (Blueprint $table) use ($tableNames, $columnNames, $pivotPermission) {
+            $table->unsignedBigInteger($pivotPermission);
+
+            $table->string('model_type');
+            $table->unsignedBigInteger($columnNames['model_morph_key']);
+            $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_permissions_model_id_model_type_index');
+
+            $table->foreign($pivotPermission)
+                ->references('id') // permission id
+                ->on($tableNames['permissions'])
+                ->onDelete('cascade');
+            $table->primary([$pivotPermission, $columnNames['model_morph_key'], 'model_type'],
+                'model_has_permissions_permission_model_type_primary');
+        });
+
+        $schemaBuilder->create($tableNames['model_has_roles'], function (Blueprint $table) use ($tableNames, $columnNames, $pivotRole) {
+            $table->unsignedBigInteger($pivotRole);
+
+            $table->string('model_type');
+            $table->unsignedBigInteger($columnNames['model_morph_key']);
+            $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_roles_model_id_model_type_index');
+
+            $table->foreign($pivotRole)
+                ->references('id') // role id
+                ->on($tableNames['roles'])
+                ->onDelete('cascade');
+            $table->primary([$pivotRole, $columnNames['model_morph_key'], 'model_type'],
+                'model_has_roles_role_model_type_primary');
+        });
+
+        $schemaBuilder->create($tableNames['role_has_permissions'], function (Blueprint $table) use ($tableNames, $pivotRole, $pivotPermission) {
+            $table->unsignedBigInteger($pivotPermission);
+            $table->unsignedBigInteger($pivotRole);
+
+            $table->foreign($pivotPermission)
+                ->references('id') // permission id
+                ->on($tableNames['permissions'])
+                ->onDelete('cascade');
+
+            $table->foreign($pivotRole)
+                ->references('id') // role id
+                ->on($tableNames['roles'])
+                ->onDelete('cascade');
+
+            $table->primary([$pivotPermission, $pivotRole], 'role_has_permissions_permission_id_role_id_primary');
+        });
+
+    }
+
+    /**
+     * @throws BindingResolutionException
+     */
+    private function setupMiddleware(): void
+    {
+
+        $router = $this->app->make(Router::class);
+        $router->aliasMiddleware('role', RoleMiddleware::class);
+        $router->aliasMiddleware('permission', PermissionMiddleware::class);
+        $router->aliasMiddleware('role_or_permission', RoleOrPermissionMiddleware::class);
     }
 
     protected function getPackageProviders($app): array
@@ -172,6 +291,8 @@ abstract class TestCase extends OrchestraTestCase
         $router->delete('tags/{id}', [TagController::class, 'destroy'])
             ->name('tags.destroy');
     }
+
+    //spatie permission
 
     private function userRoutes(Router $router): void
     {

@@ -5,22 +5,33 @@ namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 use Anil\FastApiCrud\Database\Factories\UserModelFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Request;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @method static Builder<UserModel> initializer()
- * @method static Builder<UserModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
+ *
+ * @property-read int $id
+ * @property-read string $name
+ * @property-read string $email
+ * @property-read int $status
+ * @property-read int $active
+ * @property-read Carbon $created_at
+ * @property-read Carbon $updated_at
+ * @property-read Carbon $deleted_at
  *
  * @mixin Builder<UserModel>
  */
-class UserModel extends Model
+class UserModel extends Authenticatable
 {
     /** @use HasFactory<UserModelFactory> */
     use HasFactory;
 
+    use HasRoles;
     use SoftDeletes;
 
     protected $table = 'users';
@@ -35,6 +46,9 @@ class UserModel extends Model
 
     protected $casts = [
         'password' => 'hashed',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**

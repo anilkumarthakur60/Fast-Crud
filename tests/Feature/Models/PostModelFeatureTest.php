@@ -3,11 +3,13 @@
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
+use Spatie\Permission\Models\Permission;
 
 describe(description: 'testing_post_model_factory', tests: function () {
 
     beforeEach(function () {
         $this->user = UserModel::factory()->create();
+        $this->actingAs($this->user);
     });
 
     /** @test*/
@@ -105,6 +107,10 @@ describe(description: 'test_post_controller', tests: function () {
 
     beforeEach(function () {
         $this->user = UserModel::factory()->create();
+        $this->actingAs($this->user);
+        $permission = Permission::create(['name' => 'post-create']);
+        $this->user->givePermissionTo($permission);
+        dd($this->user->permissions);
     });
 
     it(description: 'can_get_all_posts', closure: function () {
@@ -237,6 +243,8 @@ describe(description: 'test_post_controller', tests: function () {
         );
     });
     it(description: 'can_post_a_post_with_tags_ids', closure: function () {
+        $permission = Permission::create(['name' => 'post-create']);
+        $this->user->givePermissionTo($permission);
         $tagIds = TagModel::factory(2)
             ->create()
             ->modelKeys();
@@ -261,4 +269,4 @@ describe(description: 'test_post_controller', tests: function () {
         test()->assertDatabaseHas(table: 'post_tag', data: ['post_id' => $response->json('data.id'), 'tag_id' => $tagIds[1]]);
         test()->assertSame(2, PostModel::query()->find(1)->tags()->count());
     });
-});
+})->only();

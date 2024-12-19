@@ -8,8 +8,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property-read int $id
+ * @property-read string $name
+ * @property-read string $desc
+ * @property-read int $status
+ * @property-read int $active
+ * @property-read Carbon $created_at
+ * @property-read Carbon $updated_at
+ * @property-read Carbon $deleted_at
+ *
  * @method static Builder<TagModel> initializer()
  * @method static Builder<TagModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
  *

@@ -12,6 +12,11 @@ use Illuminate\Support\Carbon;
  */
 class UserResource extends JsonResource
 {
+    public function __construct(UserModel $resource)
+    {
+        parent::__construct($resource);
+    }
+
     /**
      * Transform the resource into an array.
      *
@@ -20,13 +25,13 @@ class UserResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this['id'],
-            'name' => $this['name'],
-            'email' => $this['email'],
-            'status' => $this['status'],
-            'active' => $this['active'],
-            'created_at' => Carbon::parse($this['created_at'])->format('Y-m-d H:i'),
-            'updated_at' => Carbon::parse($this['updated_at'])->format('Y-m-d H:i'),
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
+            'status' => $this->status,
+            'active' => $this->active,
+            'created_at' => Carbon::parse($this->created_at)->format('Y-m-d H:i'),
+            'updated_at' => Carbon::parse($this->updated_at)->format('Y-m-d H:i'),
         ];
     }
 }

@@ -13,6 +13,8 @@ class UpdateUserFormRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route()->parameter('id');
+
         return [
             'name' => [
                 'required',
@@ -23,7 +25,7 @@ class UpdateUserFormRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                'unique:users,email,'.$this->route()->parameter('id'),
+                "unique:users,email,{$id}",
             ],
             'password' => [
                 'nullable',

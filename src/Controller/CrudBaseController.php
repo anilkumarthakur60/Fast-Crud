@@ -14,7 +14,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use ReflectionClass;
 use ReflectionException;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -45,7 +44,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  * @method static Builder<Model> initializer()
  * @method static Builder<Model> paginates(int $perPage = 15)
  *
- * @see \Anil\FastApiCrud\Controller\CrudBaseController
+ * @see CrudBaseController
  */
 class CrudBaseController extends BaseController
 {
@@ -208,20 +207,21 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @throws ReflectionException
      * @throws Exception
      */
     protected function setupPermissions(): void
     {
-        //         $constants = new ReflectionClass($this->model);
-        //         $permissionSlug = $constants->getMethod('permissionSlug');
-
-        //         if ($permissionSlug) {
-        // //       _dd($permissionSlug);
-        //             $this->middleware('permission:view-'.$permissionSlug)->only(['index', 'show']);
-        //             $this->middleware('permission:alter-'.$permissionSlug)->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
-        //             $this->middleware('permission:delete-'.$permissionSlug)->only(['delete']);
-        //         }
+        $permissionSlug = null;
+        /** @var Model $model */
+        $model = $this->model;
+        if (method_exists($model, 'getPermissionSlug')) {
+            $permissionSlug = $model->getPermissionSlug();
+        }
+        if ($permissionSlug) {
+            $this->middleware('permission:view-'.$permissionSlug)->only(['index', 'show']);
+            $this->middleware('permission:alter-'.$permissionSlug)->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
+            $this->middleware('permission:delete-'.$permissionSlug)->only(['delete']);
+        }
     }
 
     /**
@@ -258,6 +258,19 @@ class CrudBaseController extends BaseController
 
     /**
      * @param  Builder<Model>  $query
+     * @return Builder<Model>
+     */
+    protected function applyWithAggregate(Builder $query): Builder
+    {
+        foreach ($this->withAggregate as $key => $value) {
+            $query->withAggregate($key, $value);
+        }
+
+        return $query;
+    }
+
+    /**
+     * @param  Builder<Model>  $query
      * @param  array<string>  $scopes
      * @return Builder<Model>
      */
@@ -267,19 +280,6 @@ class CrudBaseController extends BaseController
             if (method_exists($query->getModel(), $scope)) {
                 $query->{$scope}();
             }
-        }
-
-        return $query;
-    }
-
-    /**
-     * @param  Builder<Model>  $query
-     * @return Builder<Model>
-     */
-    protected function applyWithAggregate(Builder $query): Builder
-    {
-        foreach ($this->withAggregate as $key => $value) {
-            $query->withAggregate($key, $value);
         }
 
         return $query;
@@ -406,15 +406,6 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
-    protected function afterDeleteProcess(Model $model): Model
-    {
-        if (method_exists($model, 'afterDeleteProcess')) {
-            $model->afterDeleteProcess();
-        }
-
-        return $model;
-    }
-
     public function delete(): JsonResponse
     {
         request()->validate([
@@ -439,6 +430,15 @@ class CrudBaseController extends BaseController
         }
 
         return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
+    }
+
+    protected function afterDeleteProcess(Model $model): Model
+    {
+        if (method_exists($model, 'afterDeleteProcess')) {
+            $model->afterDeleteProcess();
+        }
+
+        return $model;
     }
 
     /**
@@ -485,15 +485,6 @@ class CrudBaseController extends BaseController
         return true;
     }
 
-    protected function beforeChangeStatusProcess(Model $model): Model
-    {
-        if (method_exists($model, 'beforeChangeStatusProcess')) {
-            $model->beforeChangeStatusProcess();
-        }
-
-        return $model;
-    }
-
     /**
      * @param  array<string>  $columns
      */
@@ -502,6 +493,28 @@ class CrudBaseController extends BaseController
         $fillableColumns = $this->fillableColumn($model);
 
         return count(array_diff($columns, $fillableColumns)) === 0;
+    }
+
+    /**
+     * @return array<string>
+     */
+    protected function fillableColumn(Model $model): array
+    {
+        return Schema::getColumnListing($this->tableName($model));
+    }
+
+    protected function tableName(Model $model): string
+    {
+        return $model->getTable();
+    }
+
+    protected function beforeChangeStatusProcess(Model $model): Model
+    {
+        if (method_exists($model, 'beforeChangeStatusProcess')) {
+            $model->beforeChangeStatusProcess();
+        }
+
+        return $model;
     }
 
     public function update(int|string $id): JsonResource|JsonResponse
@@ -542,19 +555,6 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
-    /**
-     * @return array<string>
-     */
-    protected function fillableColumn(Model $model): array
-    {
-        return Schema::getColumnListing($this->tableName($model));
-    }
-
-    protected function tableName(Model $model): string
-    {
-        return $model->getTable();
-    }
-
     public function changeStatus(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->findModel($id, $this->changeStatusScopes, $this->changeStatusScopeWithValue);
@@ -578,6 +578,15 @@ class CrudBaseController extends BaseController
         }
 
         return new $this->resource($model);
+    }
+
+    protected function afterChangeStatusProcess(Model $model): Model|string
+    {
+        if (method_exists($model, 'afterChangeStatusProcess')) {
+            $model->afterChangeStatusProcess();
+        }
+
+        return $model;
     }
 
     public function restoreTrashed(int|string $id): JsonResource|JsonResponse
@@ -667,15 +676,6 @@ class CrudBaseController extends BaseController
     {
         if (method_exists($model, 'afterForceDeleteProcess')) {
             $model->afterForceDeleteProcess();
-        }
-
-        return $model;
-    }
-
-    protected function afterChangeStatusProcess(Model $model): Model|string
-    {
-        if (method_exists($model, 'afterChangeStatusProcess')) {
-            $model->afterChangeStatusProcess();
         }
 
         return $model;
