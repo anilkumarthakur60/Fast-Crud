@@ -5,7 +5,7 @@ namespace Anil\FastApiCrud\Traits;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
-trait DateFilters
+trait HasDateFilters
 {
     public function scopeToday(Builder $query, $column = 'created_at'): Builder
     {

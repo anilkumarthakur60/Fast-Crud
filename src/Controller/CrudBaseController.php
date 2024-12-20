@@ -41,10 +41,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  * @property array<string> $updateScopes
  * @property array<string, mixed> $updateScopeWithValue
  *
- * @method static Builder<Model> initializer()
- * @method static Builder<Model> paginates(int $perPage = 15)
- *
- * @see CrudBaseController
+ * @mixin Builder<Model>
  */
 class CrudBaseController extends BaseController
 {
@@ -233,8 +230,10 @@ class CrudBaseController extends BaseController
      */
     public function index(): AnonymousResourceCollection
     {
-        /** @var Builder<Model> $query */
-        $query = $this->model::initializer();
+        /**
+         * @var Builder<Model> $query
+         */
+        $query = $this->model::query()->initializer();
 
         if (! empty($this->with)) {
             $query->with($this->with);
@@ -348,7 +347,7 @@ class CrudBaseController extends BaseController
 
     public function show(int|string $id): JsonResource|JsonResponse
     {
-        $model = $this->model::initializer()
+        $model = $this->model::query()->initializer()
             ->when($this->loadAll, fn (Builder $query): Builder => $query->with($this->loadAll))
             ->when($this->loadCount, fn (Builder $query): Builder => $query->withCount($this->loadCount))
             ->when($this->loadAggregate, fn (Builder $query): Builder => $this->applyLoadAggregate($query))
@@ -594,7 +593,7 @@ class CrudBaseController extends BaseController
 
     public function restoreTrashed(int|string $id): JsonResource|JsonResponse
     {
-        $model = $this->model::initializer()->onlyTrashed()
+        $model = $this->model::query()->initializer()->onlyTrashed()
             ->when($this->restoreScopes, fn ($query) => $this->applyScopes($query, $this->restoreScopes))
             ->when($this->restoreScopeWithValue, fn ($query) => $this->applyScopeWithValue($query, $this->restoreScopeWithValue))
             ->findOrFail($id);
@@ -636,7 +635,7 @@ class CrudBaseController extends BaseController
     {
         try {
             DB::beginTransaction();
-            $this->model::initializer()->onlyTrashed()->restore();
+            $this->model::query()->initializer()->onlyTrashed()->restore();
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -649,7 +648,7 @@ class CrudBaseController extends BaseController
 
     public function forceDeleteTrashed(int|string $id): JsonResponse|Model
     {
-        $model = $this->model::initializer()->onlyTrashed()->findOrFail($id);
+        $model = $this->model::query()->initializer()->onlyTrashed()->findOrFail($id);
 
         try {
             DB::beginTransaction();

@@ -2,7 +2,6 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
-use Anil\FastApiCrud\Database\Factories\UserModelFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -13,8 +12,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Request;
 
 /**
- * @method static Builder<UserModel> initializer()
- *
  * @property-read int $id
  * @property-read string $name
  * @property-read string $email
@@ -23,6 +20,11 @@ use Illuminate\Support\Facades\Request;
  * @property-read Carbon $created_at
  * @property-read Carbon $updated_at
  * @property-read Carbon $deleted_at
+ *
+ * @method static Builder<Model> initializer(bool $orderBy = true)
+ * @method static Builder<Model> paginates(int $perPage = 15)
+ * @method static Builder<Model> simplePaginates(int $perPage = 15)
+ * @method static Builder<Model> likeWhere(array<string> $attributes, ?string $searchTerm = null)
  *
  * @mixin Builder<UserModel>
  */

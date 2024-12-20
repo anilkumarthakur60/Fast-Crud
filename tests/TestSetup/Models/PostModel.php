@@ -22,10 +22,12 @@ use Illuminate\Support\Carbon;
  * @property-read Carbon $updated_at
  * @property-read Carbon $deleted_at
  *
- * @method static Builder<PostModel> initializer()
-// * @method static Builder<PostModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
+ * @method static Builder<Model> initializer(bool $orderBy = true)
+ * @method static Builder<Model> paginates(int $perPage = 15)
+ * @method static Builder<Model> simplePaginates(int $perPage = 15)
+ * @method static Builder<Model> likeWhere(array<string> $attributes, ?string $searchTerm = null)
  *
- * @mixin Builder<PostModel>
+ * @mixin Builder<Model>
  */
 class PostModel extends Model
 {

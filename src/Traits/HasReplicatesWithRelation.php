@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Collection;
 
-trait ReplicatesWithRelations
+trait HasReplicatesWithRelation
 {
     /**
      * @throws Exception
@@ -58,7 +58,6 @@ trait ReplicatesWithRelations
                     break;
                 default:
                     throw new Exception('Relation not found');
-                    break;
             }
         }
 

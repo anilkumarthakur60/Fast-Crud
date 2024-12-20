@@ -4,13 +4,13 @@ namespace Anil\FastApiCrud\Traits;
 
 use Illuminate\Support\Facades\DB;
 
-trait DeleteEvent
+trait HasDeleteEvent
 {
     public static function bootDeleteEvent(): void
     {
         static::deleting(function ($model) {
             $table = $model->getTable();
-            $columns = DB::select(DB::raw("SHOW INDEXES FROM $table WHERE NOT Non_unique and Key_Name <> 'PRIMARY'"));
+            $columns = DB::select("SHOW INDEXES FROM `{$table}` WHERE NOT Non_unique AND Key_Name <> 'PRIMARY'");
             foreach ($columns as $column) {
                 $model->{$column->Column_name} = $model->{$column->Column_name}.'_'.time();
                 $model->save();

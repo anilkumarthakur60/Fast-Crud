@@ -5,14 +5,14 @@ namespace Anil\FastApiCrud\Traits;
 use Illuminate\Support\Str;
 
 /**
- * Trait Uuid.
+ * Trait HasUuid.
  */
-trait Uuid
+trait HasUuid
 {
     /**
      * Boot function from laravel.
      */
-    protected static function bootUuid(): void
+    protected static function bootHasUuid(): void
     {
         parent::boot();
 
