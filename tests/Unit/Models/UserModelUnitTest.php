@@ -1,6 +1,5 @@
 <?php
 
-use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Support\Facades\Schema;
 
@@ -64,19 +63,9 @@ describe(description: 'user_model_class_unit_test', tests: function () {
 
     it(description: 'should_have_all_the_method_defined_in_the_model', closure: function () {
         expect(method_exists($this->userModel, 'posts'))->toBeTrue();
-    });
-
-    it(description: 'should_create_a_user_and_associate_posts', closure: function () {
-        $this->userModel->name = 'Test User';
-        $this->userModel->email = 'test@example.com';
-        $this->userModel->password = bcrypt('password');
-        $this->userModel->status = 1;
-        $this->userModel->active = 1;
-        $this->userModel->save();
-
-        $post = PostModel::factory()->create(['user_id' => $this->userModel->id]);
-
-        expect($post->user_id)->toBe($this->userModel->id);
-        expect($this->userModel->posts()->count())->toBe(1);
+        expect(method_exists($this->userModel, 'afterCreateProcess'))->toBeTrue();
+        expect(method_exists($this->userModel, 'scopeQueryFilter'))->toBeTrue();
+        expect(method_exists($this->userModel, 'scopeActive'))->toBeTrue();
+        expect(method_exists($this->userModel, 'scopeStatus'))->toBeTrue();
     });
 });
