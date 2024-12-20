@@ -66,10 +66,10 @@ describe(description: 'post_model_class_test', tests: function () {
     });
 
     it(description: 'it_should_have_correct_relationships', closure: function () {
-        expect(method_exists($this->postModel, 'user'))->toBeTrue();
-        expect(method_exists($this->postModel, 'tags'))->toBeTrue();
-        expect($this->postModel->user())->toBeInstanceOf(Illuminate\Database\Eloquent\Relations\BelongsTo::class);
-        expect($this->postModel->tags())->toBeInstanceOf(Illuminate\Database\Eloquent\Relations\BelongsToMany::class);
+        expect(method_exists($this->postModel, 'user'))->toBeTrue()
+            ->and(method_exists($this->postModel, 'tags'))->toBeTrue()
+            ->and($this->postModel->user())->toBeInstanceOf(Illuminate\Database\Eloquent\Relations\BelongsTo::class)
+            ->and($this->postModel->tags())->toBeInstanceOf(Illuminate\Database\Eloquent\Relations\BelongsToMany::class);
     });
 
     it(description: 'it_should_sync_tags_after_create', closure: function () {
