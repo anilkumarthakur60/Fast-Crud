@@ -24,12 +24,6 @@ if (! function_exists('_dd')) {
         header('Access-Control-Allow-Headers: *');
         http_response_code(500);
         dd($args);
-
-        // foreach ($args as $x) {
-        //     (new Symfony\Component\VarDumper\VarDumper())->dump($x);
-        // }
-
-        // exit(1);
     }
 }
 

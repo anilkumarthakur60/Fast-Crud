@@ -1,9 +1,9 @@
 <?php
 
+use Anil\FastApiCrud\Tests\TestSetup\Models\PermissionModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
-use Spatie\Permission\Models\Permission;
 
 describe(description: 'testing_post_model_factory', tests: function () {
 
@@ -108,12 +108,10 @@ describe(description: 'test_post_controller', tests: function () {
     beforeEach(function () {
         $this->user = UserModel::factory()->create();
         $this->actingAs($this->user);
-        $permission = Permission::create(['name' => 'post-create', 'guard_name' => 'web1']);
-        $this->user->givePermissionTo($permission);
-        dd($this->user->permissions);
     });
 
     it(description: 'can_get_all_posts', closure: function () {
+        $this->user->givePermissionTo(['view-posts']);
         PostModel::factory()
             ->createMany([
                 [
@@ -168,6 +166,7 @@ describe(description: 'test_post_controller', tests: function () {
             );
     });
     it(description: 'can_create_a_post_in_api', closure: function () {
+        $this->user->givePermissionTo(['store-posts']);
         $post = PostModel::factory()
             ->raw(
                 [
@@ -185,6 +184,8 @@ describe(description: 'test_post_controller', tests: function () {
         ]);
     });
     it(description: 'can_update_a_post', closure: function () {
+        $permission = PermissionModel::updateOrCreate(['name' => 'update-posts']);
+        $this->user->permissions()->attach($permission->id);
         $post = PostModel::factory()
             ->create(
                 [
@@ -209,6 +210,8 @@ describe(description: 'test_post_controller', tests: function () {
         ]);
     });
     it(description: 'can_delete_a_post', closure: function () {
+        $permission = PermissionModel::updateOrCreate(['name' => 'delete-posts']);
+        $this->user->permissions()->attach($permission->id);
         $post = PostModel::factory()
             ->create([
                 'name' => 'Post 1',
@@ -222,6 +225,8 @@ describe(description: 'test_post_controller', tests: function () {
         ]);
     });
     it(description: 'can_get_a_post', closure: function () {
+        $permission = PermissionModel::updateOrCreate(['name' => 'view-posts']);
+        $this->user->permissions()->attach($permission->id);
         $post = PostModel::factory()
             ->create();
         $response = $this->get(uri: 'posts/'.$post->id);
@@ -243,8 +248,8 @@ describe(description: 'test_post_controller', tests: function () {
         );
     });
     it(description: 'can_post_a_post_with_tags_ids', closure: function () {
-        $permission = Permission::create(['name' => 'post-create','guard_name' => 'web1']);
-        $this->user->givePermissionTo($permission);
+
+        $this->user->givePermissionTo(['store-posts']);
         $tagIds = TagModel::factory(2)
             ->create()
             ->modelKeys();

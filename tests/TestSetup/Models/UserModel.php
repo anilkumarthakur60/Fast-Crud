@@ -5,12 +5,12 @@ namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 use Anil\FastApiCrud\Database\Factories\UserModelFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Request;
-use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @method static Builder<UserModel> initializer()
@@ -31,10 +31,11 @@ class UserModel extends Authenticatable
     /** @use HasFactory<UserModelFactory> */
     use HasFactory;
 
-    use HasRoles;
     use SoftDeletes;
 
     protected $table = 'users';
+
+    protected string $guard_name = 'web1';
 
     protected $fillable = [
         'name',
@@ -118,6 +119,53 @@ class UserModel extends Authenticatable
                 'active' => $postData['active'],
             ]);
         }
+
+        return $this;
+    }
+
+    /**
+     * @return BelongsToMany<PermissionModel,UserModel>
+     */
+    public function permissions(): BelongsToMany
+    {
+        /** @var BelongsToMany<PermissionModel, UserModel> */
+        return $this->belongsToMany(
+            related: PermissionModel::class,
+            table: 'user_permission',
+            foreignPivotKey: 'user_id',
+            relatedPivotKey: 'permission_id'
+        );
+    }
+
+    /**
+     * @param  list<string>  $permissions
+     */
+    public function hasPermissionTo(array $permissions): bool
+    {
+        return $this->permissions()->whereIn('name', $permissions)->exists();
+    }
+
+    /**
+     * @param  list<string>  $permissions
+     */
+    public function givePermissionTo(array $permissions): static
+    {
+        foreach ($permissions as $permission) {
+            $this->permissions()->firstOrCreate(['name' => $permission]);
+        }
+        $permissions = PermissionModel::query()->whereIn('name', $permissions)->pluck('id')->toArray();
+        $this->permissions()->syncWithoutDetaching($permissions);
+
+        return $this;
+    }
+
+    /**
+     * @param  list<string>  $permissions
+     */
+    public function revokePermissionTo(array $permissions): static
+    {
+        $permissions = PermissionModel::query()->whereIn('name', $permissions)->pluck('id')->toArray();
+        $this->permissions()->detach($permissions);
 
         return $this;
     }

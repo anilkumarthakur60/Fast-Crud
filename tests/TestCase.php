@@ -6,6 +6,8 @@ use Anil\FastApiCrud\Providers\ApiCrudServiceProvider;
 use Anil\FastApiCrud\Tests\TestSetup\Controllers\PostController;
 use Anil\FastApiCrud\Tests\TestSetup\Controllers\TagController;
 use Anil\FastApiCrud\Tests\TestSetup\Controllers\UserController;
+use Anil\FastApiCrud\Tests\TestSetup\Middleware\PermissionMiddleware;
+use Anil\FastApiCrud\Tests\TestSetup\Models\PermissionModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
@@ -16,11 +18,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Routing\Router;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
-use Spatie\Permission\Middleware\PermissionMiddleware;
-use Spatie\Permission\Middleware\RoleMiddleware;
-use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
@@ -36,6 +36,7 @@ abstract class TestCase extends OrchestraTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
         Factory::guessFactoryNamesUsing(
             function (string $modelName): string {
                 return 'Anil\FastApiCrud\\Database\\Factories\\'.class_basename($modelName).'Factory';
@@ -43,7 +44,7 @@ abstract class TestCase extends OrchestraTestCase
         );
         /** @var Application $app */
         $app = $this->app;
-        $app['config']->set('auth.guards.web1', [
+        $app['config']->set('auth.guards.web', [
             'driver' => 'session',
             'provider' => 'users',
         ]);
@@ -52,17 +53,12 @@ abstract class TestCase extends OrchestraTestCase
             'driver' => 'eloquent',
             'model' => UserModel::class,
         ]);
-        // Clear permission cache
-        // $this->artisan('permission:cache-reset');
-        // app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $app['config']->set('permission.models.permission', Permission::class);
-        $app['config']->set('permission.models.role', Role::class);
-        $app['config']->set('permission.cache.key', 'spatie.permission.cache');
-        $app['config']->set('auth.defaults.guard', 'web1');
-        $app['config']->set('permission.guard_name', 'web1');
+        $app['config']->set('auth.defaults.guard', 'web');
+        $app['config']->set('permission.guard_name', 'web');
         $this->setUpDatabase();
         $this->setupMiddleware();
+
     }
 
     protected function setUpDatabase(): void
@@ -150,91 +146,25 @@ abstract class TestCase extends OrchestraTestCase
     {
         /** @var Application $app */
         $app = $this->app;
-        $schemaBuilder = $app['db']->connection()->getSchemaBuilder();
-        $tableNames = [
-            'roles' => 'roles',
-            'permissions' => 'permissions',
-            'model_has_permissions' => 'model_has_permissions',
-            'model_has_roles' => 'model_has_roles',
-            'role_has_permissions' => 'role_has_permissions',
-        ];
-        $columnNames = [
-            'role_pivot_key' => 'role_id',
-            'permission_pivot_key' => 'permission_id',
-            'model_morph_key' => 'model_id',
-            'team_foreign_key' => 'team_id',
-        ];
-        $pivotRole = 'role_id';
-        $pivotPermission = 'permission_id';
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('permissions', function (Blueprint $table) {
+                $table->id();
+                $table->string(column: 'name');
+                $table->timestamps();
+            });
 
-        $schemaBuilder->create($tableNames['permissions'], function (Blueprint $table) {
-            //$table->engine('InnoDB');
-            $table->bigIncrements('id'); // permission id
-            $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
-            $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
-            $table->string('group')->nullable();
-            $table->timestamps();
-
-            $table->unique(['name', 'guard_name']);
-        });
-
-        $schemaBuilder->create($tableNames['roles'], function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('name');
-            $table->string('guard_name');
-            $table->timestamps();
-            $table->unique(['name', 'guard_name']);
-        });
-
-        $schemaBuilder->create($tableNames['model_has_permissions'], function (Blueprint $table) use ($tableNames, $columnNames, $pivotPermission) {
-            $table->unsignedBigInteger($pivotPermission);
-
-            $table->string('model_type');
-            $table->unsignedBigInteger($columnNames['model_morph_key']);
-            $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_permissions_model_id_model_type_index');
-
-            $table->foreign($pivotPermission)
-                ->references('id') // permission id
-                ->on($tableNames['permissions'])
-                ->onDelete('cascade');
-            $table->primary([$pivotPermission, $columnNames['model_morph_key'], 'model_type'],
-                'model_has_permissions_permission_model_type_primary');
-        });
-
-        $schemaBuilder->create($tableNames['model_has_roles'], function (Blueprint $table) use ($tableNames, $columnNames, $pivotRole) {
-            $table->unsignedBigInteger($pivotRole);
-
-            $table->string('model_type');
-            $table->unsignedBigInteger($columnNames['model_morph_key']);
-            $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_roles_model_id_model_type_index');
-
-            $table->foreign($pivotRole)
-                ->references('id') // role id
-                ->on($tableNames['roles'])
-                ->onDelete('cascade');
-            $table->primary([$pivotRole, $columnNames['model_morph_key'], 'model_type'],
-                'model_has_roles_role_model_type_primary');
-        });
-
-        $schemaBuilder->create($tableNames['role_has_permissions'], function (Blueprint $table) use ($tableNames, $pivotRole, $pivotPermission) {
-            $table->unsignedBigInteger($pivotPermission);
-            $table->unsignedBigInteger($pivotRole);
-
-            $table->foreign($pivotPermission)
-                ->references('id') // permission id
-                ->on($tableNames['permissions'])
-                ->onDelete('cascade');
-
-            $table->foreign($pivotRole)
-                ->references('id') // role id
-                ->on($tableNames['roles'])
-                ->onDelete('cascade');
-
-            $table->primary([$pivotPermission, $pivotRole], 'role_has_permissions_permission_id_role_id_primary');
-        });
-
-        getColumns('role_has_permissions');
-
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('user_permission', function (Blueprint $table) {
+                $table->id();
+                $table->foreignIdFor(UserModel::class, 'user_id')
+                    ->constrained('users')
+                    ->cascadeOnDelete();
+                $table->foreignIdFor(PermissionModel::class, 'permission_id')
+                    ->constrained('permissions')
+                    ->cascadeOnDelete();
+            });
     }
 
     /**
@@ -245,15 +175,16 @@ abstract class TestCase extends OrchestraTestCase
         /** @var Application $app */
         $app = $this->app;
         $router = $app->make(Router::class);
-        $router->aliasMiddleware('role', RoleMiddleware::class);
+        // $router->aliasMiddleware('role', RoleMiddleware::class);
         $router->aliasMiddleware('permission', PermissionMiddleware::class);
-        $router->aliasMiddleware('role_or_permission', RoleOrPermissionMiddleware::class);
+        // $router->aliasMiddleware('role_or_permission', RoleOrPermissionMiddleware::class);
     }
 
     protected function getPackageProviders($app): array
     {
         return [
             ApiCrudServiceProvider::class,
+            PermissionServiceProvider::class,
         ];
     }
 

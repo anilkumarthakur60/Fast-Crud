@@ -23,7 +23,7 @@ use Illuminate\Support\Carbon;
  * @property-read Carbon $deleted_at
  *
  * @method static Builder<PostModel> initializer()
- * @method static Builder<PostModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
+// * @method static Builder<PostModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
  *
  * @mixin Builder<PostModel>
  */
@@ -91,5 +91,10 @@ class PostModel extends Model
         if ($request->filled('tag_ids')) {
             $this->tags()->sync((array) $request->input('tag_ids'));
         }
+    }
+
+    public function getPermissionSlug(): string
+    {
+        return 'posts';
     }
 }
