@@ -13,7 +13,6 @@ parameters:
 
     excludePaths:
         - src/Providers/ApiCrudServiceProvider.php
-        - src/Helpers/fastApiCrud.php
 
     ignoreErrors:
         - '#Trait Anil\\FastApiCrud\\Traits\\Uuid is used zero times and is not analysed#'

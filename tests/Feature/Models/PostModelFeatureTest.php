@@ -274,4 +274,4 @@ describe(description: 'test_post_controller', tests: function () {
         test()->assertDatabaseHas(table: 'post_tag', data: ['post_id' => $response->json('data.id'), 'tag_id' => $tagIds[1]]);
         test()->assertSame(2, PostModel::query()->find(1)->tags()->count());
     });
-})->only();
+});

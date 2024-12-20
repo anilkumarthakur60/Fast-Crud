@@ -121,7 +121,6 @@ if (! function_exists('dateForReports')) {
         }
     }
 }
-
 if (! function_exists('getFilterByKey')) {
     /**
      * Get filter value by key.
@@ -130,6 +129,12 @@ if (! function_exists('getFilterByKey')) {
     {
         $filters = Request::get('filters');
         $jsonData = is_string($filters) ? json_decode($filters, true) : [];
+
+        // Ensure $jsonData is an array before using collect
+        if (! is_array($jsonData)) {
+            return null;
+        }
+
         $value = collect($jsonData)->get($key);
 
         return is_string($value) ? $value : null;
@@ -147,11 +152,7 @@ if (! function_exists('getArrayFilterByKey')) {
     {
         if (is_string($data)) {
             $decoded = json_decode($data, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $data = $decoded;
-            } else {
-                $data = [];
-            }
+            $data = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : [];
         }
 
         /** @var array<string, mixed> */
