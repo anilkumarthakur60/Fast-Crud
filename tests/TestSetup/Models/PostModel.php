@@ -22,12 +22,12 @@ use Illuminate\Support\Carbon;
  * @property-read Carbon $updated_at
  * @property-read Carbon $deleted_at
  *
- * @method static Builder<Model> initializer(bool $orderBy = true)
- * @method static Builder<Model> paginates(int $perPage = 15)
- * @method static Builder<Model> simplePaginates(int $perPage = 15)
- * @method static Builder<Model> likeWhere(array<string> $attributes, ?string $searchTerm = null)
+ * @method static Builder<PostModel> initializer(bool $orderBy = true)
+ * @method static Builder<PostModel> paginates(int $perPage = 15)
+ * @method static Builder<PostModel> simplePaginates(int $perPage = 15)
+ * @method static Builder<PostModel> likeWhere(array $attributes, ?string $searchTerm = null)
  *
- * @mixin Builder<Model>
+ * @mixin Builder<PostModel>
  */
 class PostModel extends Model
 {
@@ -98,5 +98,14 @@ class PostModel extends Model
     public function getPermissionSlug(): string
     {
         return 'posts';
+    }
+
+    /**
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
+     */
+    public function scopeQueryFilter(Builder $query, string $value): Builder
+    {
+        return $query->likeWhere(['name', 'desc'], $value);
     }
 }

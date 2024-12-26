@@ -29,11 +29,12 @@ class ApiCrudServiceProvider extends ServiceProvider
             return $this->where(function (Builder $query) use ($attributes, $searchTerm) {
                 foreach ($attributes as $attribute) {
                     $query->when(
-                        Str::contains($attribute, '.'),
+                        Str::contains($attribute, ':'),
                         function (Builder $query) use ($attribute, $searchTerm) {
-                            [$relationName, $relationAttribute] = explode('.', $attribute);
-                            $query->orWhereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm) {
-                                $query->where($relationAttribute, 'LIKE', "%{$searchTerm}%");
+                            [$relationName, $relationAttributes] = explode(':', $attribute);
+                            $relationAttributes = explode(',', $relationAttributes);
+                            $query->whereHas($relationName, function (Builder $builder) use ($relationAttributes, $searchTerm) {
+                                $builder->orWhereAny($relationAttributes, 'LIKE', "%{$searchTerm}%");
                             });
                         },
                         function (Builder $query) use ($attribute, $searchTerm) {
@@ -61,7 +62,7 @@ class ApiCrudServiceProvider extends ServiceProvider
             /** @var Builder<Model> $this */
             $validated = request()->all();
             $rowsPerPage = $validated['rowsPerPage'] ?? 15;
-            $perPage = $rowsPerPage === 0 ? 15 : $rowsPerPage;
+            $perPage = $rowsPerPage === 0 ? $this->count() : $rowsPerPage;
             $perPage = (int) $perPage;
 
             return $this->paginate($perPage, $columns, $pageName, $page, $total);
@@ -80,7 +81,7 @@ class ApiCrudServiceProvider extends ServiceProvider
             /** @var Builder<Model> $this */
             $validated = request()->all();
             $rowsPerPage = $validated['rowsPerPage'] ?? 15;
-            $perPage = $rowsPerPage === 0 ? 15 : $rowsPerPage;
+            $perPage = $rowsPerPage === 0 ? $this->count() : $rowsPerPage;
             $perPage = (int) $perPage;
 
             return $this->simplePaginate($perPage, $columns, $pageName, $page);
@@ -97,48 +98,33 @@ class ApiCrudServiceProvider extends ServiceProvider
             $request = request();
             $filters = [];
 
-            // Validate and decode 'filters' from the request if present
             if ($request->filled('filters')) {
                 $filtersInput = $request->query('filters', '{}');
 
-                // Ensure 'filters' is a string before decoding
                 if (is_string($filtersInput)) {
                     $decodedFilters = json_decode($filtersInput, true);
 
-                    // Handle JSON decoding errors
                     if (json_last_error() === JSON_ERROR_NONE && is_array($decodedFilters)) {
                         $filters = $decodedFilters;
                     }
                 }
             }
 
-            // Initialize the model's query
-            if (method_exists($this->getModel(), 'initializeModel')) {
-                $model = $this->getModel()->initializeModel()->newQuery();
-            } else {
-                $model = $this->newQuery();
-            }
-
-            // Apply filters using scopes
             if (! empty($filters)) {
                 foreach (collect($filters) as $filter => $value) {
-                    if (isset($value) && method_exists($model, 'scope'.Str::studly($filter))) {
-                        // Dynamically call the scope method
-                        $model->{$filter}($value);
+                    if (isset($value) && method_exists($this->getModel(), 'scope'.Str::studly($filter))) {
+                        $this->{$filter}($value);
                     }
                 }
             }
 
-            // Handle sorting
             $sortBy = $request->query('sortBy', 'id');
             $desc = $request->boolean('descending', true);
 
             if ($orderBy) {
-                // Check if the model has sortByDefaults method
                 if ($sortBy && method_exists($this->getModel(), 'sortByDefaults')) {
-                    $sortByDefaults = $this->getModel()->sortByDefaults();
-
-                    // Ensure 'sortBy' and 'sortByDesc' keys exist and are of correct types
+                    // @phpstan-ignore-next-line
+                    $sortByDefaults = $this->sortByDefaults();
                     if (
                         isset($sortByDefaults['sortBy']) && is_string($sortByDefaults['sortBy']) &&
                         isset($sortByDefaults['sortByDesc']) && is_bool($sortByDefaults['sortByDesc'])
@@ -147,19 +133,17 @@ class ApiCrudServiceProvider extends ServiceProvider
                         $desc = $sortByDefaults['sortByDesc'];
                     }
                 }
-
-                // Ensure 'sortBy' is a string before applying sorting
                 if (is_string($sortBy)) {
-                    $desc ? $model->latest($sortBy) : $model->oldest($sortBy);
+                    $desc ? $this->latest($sortBy) : $this->oldest($sortBy);
                 }
             }
 
-            return $model;
+            return $this;
         });
         /**
          * Macro to add aggregates to the query.
          *
-         * @param  array<string, string|array<string>>  $aggregates
+         * @param  array<string, array<string>|string>  $aggregates
          * @return Builder<Model>
          */
         Builder::macro('withAggregates', function (array $aggregates) {
@@ -167,11 +151,16 @@ class ApiCrudServiceProvider extends ServiceProvider
             if (! count($aggregates)) {
                 return $this;
             }
-            foreach ($aggregates as $relation => $columns) {
-                $columns = is_array($columns) ? $columns : [$columns];
-                foreach ($columns as $column) {
-                    $this->withAggregate($relation, $column);
+            foreach ($aggregates as $relation => $value) {
+                // Check if $value is an array (for multiple parameters)
+                if (is_array($value)) {
+                    $column = $value[0]; // First element is the column
+                    $function = isset($value[1]) && is_string($value[1]) ? $value[1] : null; // Second element is the optional function
+                } else {
+                    $column = $value; // Single string column
+                    $function = null; // No function provided
                 }
+                $this->withAggregate($relation, $column, $function);
             }
 
             return $this;
@@ -186,7 +175,7 @@ class ApiCrudServiceProvider extends ServiceProvider
          * @param  int  $count
          * @return Builder<Model>
          */
-        Builder::macro('withCountWhereHas', function ($relation, ?Closure $callback = null, $operator = '>=', $count = 1) {
+        Builder::macro('withCountWhereHas', function ($relation, ?Closure $callback = null, $operator = '>=', $count = 1): Builder {
             /** @var Builder<Model> $this */
             $this->whereHas(Str::before($relation, ':'), $callback, $operator, $count)
                 ->withCount(relations: $callback ? [$relation => fn ($query) => $callback($query)] : $relation);

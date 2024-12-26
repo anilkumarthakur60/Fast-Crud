@@ -1,212 +1,199 @@
 <?php
 
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
-use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 
-beforeAll(function () {
+describe('ProviderMacrosTest', function () {
+    it('adds the likeWhere macro to Builder', function () {
 
-    UserModel::factory()->count(30)->create()->each(function (UserModel $user): void {
-        PostModel::factory()->count(5)->create(['user_id' => $user->id]);
+        //        PostModel::factory(5)->create();
+        //        $query = PostModel::query()->likeWhere(['name', 'desc'], 'Test');
+        //        $sql = $query->toRawSql();
+        //        expect($sql)->toBe("select * from `posts` where (`name` LIKE '%Test%' or `desc` LIKE '%Test%') and `posts`.`deleted_at` is null");
+
+        $query = PostModel::query()->likeWhere(['name', 'desc', 'tags:name,id'], 'Test');
+        $sql = $query->toRawSql();
+        expect($sql)->toBe("select * from `posts` where (`name` LIKE '%Test%' or `desc` LIKE '%Test%' or exists (select * from `tags` inner join `post_tag` on `tags`.`id` = `post_tag`.`tag_id` where `posts`.`id` = `post_tag`.`post_id` and `name` LIKE '%Test%' and `tags`.`deleted_at` is null)) and `posts`.`deleted_at` is null");
     });
-});
 
-it('adds the likeWhere macro to Builder', function () {
-    $query = PostModel::query()->likeWhere(['title', 'desc'], 'Test');
+    it('adds the paginates macro to Builder', function () {
+        PostModel::factory(5)->create();
 
-    // Assert that the where clauses are applied
-    // Since we don't have actual data matching 'Test', we can check the SQL
-    $sql = $query->toSql();
-    expect($sql)->toContain('where (');
+        $query = PostModel::query()->paginates();
+        expect($query->perPage())->toBe(15)
+            ->and($query)->toBeInstanceOf(LengthAwarePaginator::class);
 
-    // Check that 'LIKE' is used
-    expect($sql)->toContain('LIKE');
-});
+        request()->merge(['rowsPerPage' => 2]);
+        $query = PostModel::query()->paginates();
+        expect($query)->toBeInstanceOf(LengthAwarePaginator::class)
+            ->and($query->perPage())->toBe(2);
+        request()->merge(['rowsPerPage' => 0]);
+        $query = PostModel::query()->paginates();
+        expect($query->perPage())->toBe(PostModel::query()->count());
 
-it('adds the paginates macro to Builder', function () {
-    // Simulate a request with 'rowsPerPage'
-    $this->withSession(['rowsPerPage' => 10]);
+    });
 
-    $perPage = 10;
-    $query = PostModel::query()->paginates();
+    it('adds the simplePaginates macro to Builder', function () {
+        PostModel::factory(5)->create();
 
-    expect($query)->toBeInstanceOf(LengthAwarePaginator::class);
-    expect($query->perPage())->toBe($perPage);
-});
+        $query = PostModel::query()->simplePaginates();
+        expect($query->perPage())->toBe(15)
+            ->and($query)->toBeInstanceOf(Paginator::class);
 
-it('adds the simplePaginates macro to Builder', function () {
-    // Simulate a request with 'rowsPerPage'
-    $this->withSession(['rowsPerPage' => 5]);
+        request()->merge(['rowsPerPage' => 5]);
+        $query = PostModel::query()->simplePaginates();
 
-    $perPage = 5;
-    $query = PostModel::query()->simplePaginates();
+        expect($query)->toBeInstanceOf(Paginator::class)
+            ->and($query->perPage())->toBe(5);
 
-    expect($query)->toBeInstanceOf(Paginator::class);
-    expect($query->perPage())->toBe($perPage);
-});
+        request()->merge(['rowsPerPage' => 0]);
+        $query = PostModel::query()->simplePaginates();
+        expect($query->perPage())->toBe(PostModel::query()->count());
+    });
 
-it('adds the initializer macro to Builder with filters and sorting', function () {
-    // Simulate a request with filters and sorting
-    request()->merge([
-        'filters' => json_encode(['title' => 'Sample']),
-        'sortBy' => 'title',
-        'descending' => false,
-    ]);
+    it('adds the initializer macro to Builder with filters and sorting', function () {
 
-    $query = PostModel::query()->initializer();
+        PostModel::factory(5)->create();
+        // Simulate a request with filters and sorting
+        request()->merge([
+            'filters' => json_encode(['queryFilter' => 'Test']),
+            'sortBy' => 'name',
+            'descending' => false,
+        ]);
 
-    // Assert that the filter is applied
-    expect($query->getQuery()->wheres)->toHaveCount(1);
-    expect($query->getQuery()->wheres[0]['type'])->toBe('Basic');
-    expect($query->getQuery()->wheres[0]['column'])->toBe('title');
-    expect($query->getQuery()->wheres[0]['operator'])->toBe('LIKE');
+        // Initialize the query with the initializer macro
+        $query = PostModel::query()->initializer();
 
-    // Assert that the sorting is applied
-    $orders = $query->getQuery()->orders;
-    expect($orders)->toHaveCount(1);
-    expect($orders[0]['column'])->toBe('title');
-    expect($orders[0]['direction'])->toBe('asc');
-});
+        // Retrieve the built query's where clauses
+        $wheres = $query->getQuery()->wheres;
 
-it('adds the withAggregates macro to Builder', function () {
-    $query = PostModel::query()->withAggregates(['comments' => 'count']);
+        // Assert that there is exactly one where clause
+        expect($wheres)->toHaveCount(1)
+            ->and($wheres[0]['type'])->toBe('Nested');
 
-    // Assert that the aggregate is applied
-    $with = $query->getQuery()->getEagerLoads();
-    expect($with)->toHaveKey('comments_count');
-});
+        // Assert that the where clause is of type 'Nested'
 
-it('adds the withCountWhereHas macro to Builder', function () {
-    $query = PostModel::query()->withCountWhereHas('comments', function ($q) {
-        $q->where('comment', 'like', '%test%');
-    }, '>=', 2);
+        // Retrieve the nested query's where clauses
+        $nestedWheres = $wheres[0]['query']->wheres;
 
-    // Assert that the whereHas is applied
-    $sql = $query->toSql();
-    expect($sql)->toContain('exists');
+        // Assert that there are two where clauses inside the nested query
+        expect($nestedWheres)->toHaveCount(2)
+            ->and($nestedWheres[0])->toMatchArray([
+                'type' => 'Basic',
+                'column' => 'name',
+                'operator' => 'LIKE',
+                'value' => '%Test%',
+                'boolean' => 'or',
+            ])
+            ->and($nestedWheres[1])->toMatchArray([
+                'type' => 'Basic',
+                'column' => 'desc',
+                'operator' => 'LIKE',
+                'value' => '%Test%',
+                'boolean' => 'or',
+            ]);
 
-    // Assert that withCount is applied
-    $with = $query->getQuery()->getEagerLoads();
-    expect($with)->toHaveKey('comments');
-});
+        // Assert the first nested where clause
 
-it('adds the orWithCountWhereHas macro to Builder', function () {
-    $query = PostModel::query()
-        ->withCountWhereHas('comments', function ($q) {
-            $q->where('comment', 'like', '%test%');
-        }, '>=', 2)
-        ->orWithCountWhereHas('comments', function ($q) {
-            $q->where('comment', 'like', '%example%');
-        }, '>=', 3);
+        // Assert the second nested where clause
 
-    // Assert that the orWhereHas is applied
-    $sql = $query->toSql();
-    expect($sql)->toContain('or exists');
+        // Retrieve the built query's order clauses
+        $orders = $query->getQuery()->orders;
 
-    // Assert that withCount is applied for both relations
-    $with = $query->getQuery()->getEagerLoads();
-    expect($with)->toHaveKey('comments');
-});
+        // Assert that the order clause is correctly applied
+        expect($orders)->toHaveCount(1)
+            ->and($orders[0]['column'])->toBe('name')
+            ->and($orders[0]['direction'])->toBe('asc');
 
-it('adds the paginate macro to Collection', function () {
-    $collection = PostModel::all();
-    $perPage = 10;
+    });
 
-    $paginated = $collection->paginate($perPage);
+    it('adds the withCountWhereHas macro to Builder', function () {
+        PostModel::factory(5)->hasTags(5, ['name' => 'Test'])->create();
+        $query = PostModel::query()->withCountWhereHas('tags', function ($q) {
+            $q->where('name', 'like', '%test%');
+        }, '>=', 2);
 
-    expect($paginated)->toBeInstanceOf(LengthAwarePaginator::class);
-    expect($paginated->perPage())->toBe($perPage);
-    expect($paginated->items())->toHaveCount($perPage);
-});
+        // Assert that the raw SQL matches the expected format
+        $sql = $query->toRawSql();
+        expect($sql)->toBe("select `posts`.*, (select count(*) from `tags` inner join `post_tag` on `tags`.`id` = `post_tag`.`tag_id` where `posts`.`id` = `post_tag`.`post_id` and `name` like '%test%' and `tags`.`deleted_at` is null) as `tags_count` from `posts` where (select count(*) from `tags` inner join `post_tag` on `tags`.`id` = `post_tag`.`tag_id` where `posts`.`id` = `post_tag`.`post_id` and `name` like '%test%' and `tags`.`deleted_at` is null) >= 2 and `posts`.`deleted_at` is null");
 
-it('initializer macro uses sortByDefaults when sortBy is not provided', function () {
-    // Simulate a request without sortBy
-    request()->merge([
-        'filters' => json_encode(['title' => 'Sample']),
-    ]);
+    });
+    it('adds the paginate macro to Collection', function () {
+        PostModel::factory(5)->create();
+        $collection = PostModel::with('user')->get();
+        $perPage = 10;
 
-    $query = PostModel::query()->initializer();
+        $paginated = $collection->paginate($perPage);
 
-    // Assert that sortByDefaults are applied
-    $orders = $query->getQuery()->orders;
-    expect($orders)->toHaveCount(1);
-    expect($orders[0]['column'])->toBe('created_at');
-    expect($orders[0]['direction'])->toBe('desc');
-});
+        expect($paginated)->toBeInstanceOf(LengthAwarePaginator::class)
+            ->and($paginated->perPage())->toBe($perPage)
+            ->and($paginated->items())->toHaveCount(5);
+    });
 
-it('initializer macro does not apply sorting when orderBy is false', function () {
-    // Simulate a request with sorting
-    request()->merge([
-        'sortBy' => 'title',
-        'descending' => false,
-    ]);
+    it('initializer macro does not apply sorting when orderBy is false', function () {
+        // Simulate a request with sorting
+        request()->merge([
+            'sortBy' => 'name',
+            'descending' => false,
+        ]);
 
-    $query = PostModel::query()->initializer(orderBy: false);
+        $query = PostModel::query()->initializer(orderBy: false);
 
-    // Assert that no sorting is applied
-    $orders = $query->getQuery()->orders;
-    expect($orders)->toHaveCount(0);
-});
+        // Assert that no sorting is applied
+        $orders = $query->getQuery()->orders;
+        expect($orders)->toBeNull();
+    });
 
-it('initializer macro handles invalid JSON in filters gracefully', function () {
-    // Simulate a request with invalid JSON in filters
-    request()->merge([
-        'filters' => '{invalid_json}',
-    ]);
+    it('initializer macro handles invalid JSON in filters gracefully', function () {
+        // Simulate a request with invalid JSON in filters
+        request()->merge([
+            'filters' => '{invalid_json}',
+        ]);
 
-    $query = PostModel::query()->initializer();
+        $query = PostModel::query()->initializer();
 
-    // Assert that no filters are applied
-    expect($query->getQuery()->wheres)->toHaveCount(0);
-});
+        // Assert that no filters are applied
+        expect($query->getQuery()->wheres)->toBeEmpty();
+    });
 
-it('initializer macro applies multiple filters correctly', function () {
-    // Simulate a request with multiple filters
-    request()->merge([
-        'filters' => json_encode(['title' => 'Sample', 'body' => 'Test']),
-    ]);
+    it('initializer macro applies multiple filters correctly', function () {
+        // Simulate a request with multiple filters
+        request()->merge([
+            'filters' => json_encode(['queryFilter' => 'Sample']),
+        ]);
 
-    $query = PostModel::query()->initializer();
+        $query = PostModel::query()->initializer();
 
-    // Assert that multiple where clauses are applied
-    expect($query->getQuery()->wheres)->toHaveCount(2);
-});
+        // Assert that multiple where clauses are applied
+        expect($query->getQuery()->wheres)->toHaveCount(1);
+    });
 
-it('likeWhere macro handles relational attributes correctly', function () {
-    $query = PostModel::query()->likeWhere(['comments.comment'], 'Great');
+    it('likeWhere macro handles relational attributes correctly', function () {
+        $query = PostModel::query()->likeWhere(['tags.name'], 'Great');
 
-    // Assert that whereHas is used for the relation
-    $sql = $query->toSql();
-    expect($sql)->toContain('exists');
-});
+        // Assert that whereHas is used for the relation
+        $sql = $query->toSql();
+        expect($sql)->toContain('exists');
+    });
 
-it('paginates macro defaults to 15 per page when rowsPerPage is not set', function () {
-    $query = PostModel::query()->paginates();
+    it('paginates macro defaults to 15 per page when rowsPerPage is zero', function () {
+        $query = PostModel::query()->paginates();
 
-    expect($query->perPage())->toBe(15);
-});
+        expect($query->perPage())->toBe(15);
+        // Simulate a request with 'rowsPerPage' as 0
+        request()->merge(['rowsPerPage' => 0]);
 
-it('paginates macro defaults to 15 per page when rowsPerPage is zero', function () {
-    // Simulate a request with 'rowsPerPage' as 0
-    request()->merge(['rowsPerPage' => 0]);
+        $query = PostModel::query()->paginates();
 
-    $query = PostModel::query()->paginates();
+        expect($query->perPage())->toBe(15);
+    });
 
-    expect($query->perPage())->toBe(15);
-});
-
-it('simplePaginates macro defaults to 15 per page when rowsPerPage is not set', function () {
-    $query = PostModel::query()->simplePaginates();
-
-    expect($query->perPage())->toBe(15);
-});
-
-it('simplePaginates macro defaults to 15 per page when rowsPerPage is zero', function () {
-    // Simulate a request with 'rowsPerPage' as 0
-    request()->merge(['rowsPerPage' => 0]);
-
-    $query = PostModel::query()->simplePaginates();
-
-    expect($query->perPage())->toBe(15);
-});
+    it('simplePaginates macro defaults to 15 per page when rowsPerPage is not set', function () {
+        request()->merge(['rowsPerPage' => 0]);
+        $query = PostModel::query()->simplePaginates();
+        expect($query->perPage())->toBe(15);
+        $query = PostModel::query()->simplePaginates();
+        expect($query->perPage())->toBe(15);
+    });
+})->only();

@@ -56,7 +56,7 @@ if (! function_exists('totalSeconds')) {
         if (count($time) >= 3) {
             $carbon = new Carbon($times);
             $seconds = $carbon->diffInSeconds(Carbon::createFromFormat('H:i:s', '00:00:00'));
-        } elseif (count($time) == 2) {
+        } elseif (count($time) === 2) {
             $minSec = '00:'.$times;
             $carbon = new Carbon($minSec);
             $seconds = $carbon->diffInSeconds(Carbon::createFromFormat('H:i:s', '00:00:00'));
@@ -76,7 +76,7 @@ if (! function_exists('duration')) {
     {
         $interval = CarbonInterval::seconds($duration)->cascade();
 
-        return sprintf('%dh %dm', $interval->totalHours, $interval->toArray()['minutes']);
+        return sprintf('%dh %dm', $interval->totalHours, $interval->minutes);
     }
 }
 
@@ -86,11 +86,7 @@ if (! function_exists('dateForHumans')) {
      */
     function dateForHumans(?string $date): ?string
     {
-        if ($date) {
-            return Carbon::parse($date)->diffForHumans();
-        }
-
-        return null;
+        return $date ? Carbon::parse($date)->diffForHumans() : null;
     }
 }
 
@@ -100,11 +96,7 @@ if (! function_exists('ymdDate')) {
      */
     function ymdDate(?string $date, string $format = 'Y-m-d'): ?string
     {
-        if ($date) {
-            return Carbon::parse($date)->format($format);
-        }
-
-        return null;
+        return $date ? Carbon::parse($date)->format($format) : null;
     }
 }
 
@@ -121,6 +113,7 @@ if (! function_exists('dateForReports')) {
         }
     }
 }
+
 if (! function_exists('getFilterByKey')) {
     /**
      * Get filter value by key.
@@ -179,7 +172,7 @@ if (! function_exists('defaultOrder')) {
      */
     function defaultOrder(): string
     {
-        return (bool) request()->query('descending') === true ? 'ASC' : 'DESC';
+        return request()->query('descending') === 'true' ? 'ASC' : 'DESC';
     }
 }
 
@@ -268,5 +261,155 @@ if (! function_exists('describe') && version_compare(app()->version(), '10.0.0',
         $filename = Backtrace::testFile();
 
         return new DescribeCall(TestSuite::getInstance(), $filename, $description, $tests);
+    }
+}
+
+if (! function_exists('recursiveDatabaseClasses')) {
+    /**
+     * Recursively scan a directory for PHP files and extract the fully qualified class names.
+     *
+     * @param  array<string>  $excluding  An array of class names to exclude.
+     * @return array<int,mixed> An array of fully qualified class names.
+     *
+     * */
+    function recursiveDatabaseClasses(?string $directory = null, array $excluding = []): array
+    {
+        // Determine base path, default to the database path if no directory is provided
+        $basePath = $directory ? database_path($directory) : database_path();
+
+        // Initialize an empty array for classes
+        $classes = [];
+
+        // Ensure the directory exists before proceeding
+        if (! is_dir($basePath)) {
+            return $classes;
+        }
+
+        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($basePath));
+
+        foreach ($files as $file) {
+            if ($file->isFile() && $file->getExtension() === 'php') {
+                $fileContent = file_get_contents($file->getPathname());
+
+                preg_match('/namespace\s+(.+?);/', $fileContent, $namespaceMatch);
+                preg_match('/class\s+([a-zA-Z0-9_]+)/', $fileContent, $classMatch);
+
+                $namespace = $namespaceMatch[1] ?? null;
+                $className = $classMatch[1] ?? null;
+
+                if ($namespace && $className) {
+                    $classes[] = $namespace.'\\'.$className;
+                }
+            }
+        }
+
+        $classes = array_filter($classes, function ($model) use ($excluding) {
+            return ! in_array($model, $excluding);
+        });
+
+        return array_values($classes);
+    }
+}
+
+if (! function_exists('toFormattedDateString')) {
+    function toFormattedDateString(?string $date): ?string
+    {
+        return $date ? Carbon::parse($date)->toFormattedDateString() : null;
+    }
+}
+
+if (! function_exists('uuid')) {
+    function uuid(): Ramsey\Uuid\UuidInterface
+    {
+        return Str::uuid();
+    }
+}
+
+if (! function_exists('implodeFillable')) {
+    function implodeFillable(mixed $model): string
+    {
+        if (is_subclass_of($model, 'Illuminate\Database\Eloquent\Model')) {
+            $model = new $model;
+            $columns = $model->getFillable();
+        } else {
+            $columns = \Illuminate\Support\Facades\DB::getSchemaBuilder()->getColumnListing($model);
+        }
+
+        return implode(',', $columns);
+    }
+}
+
+if (! function_exists('toDateString')) {
+    function toDateString(?string $date): ?string
+    {
+        return $date ? Carbon::parse($date)->toDateString() : null;
+    }
+}
+
+if (! function_exists('toDateTimeString')) {
+    function toDateTimeString(?string $date): ?string
+    {
+        return $date ? Carbon::parse($date)->toDateTimeString() : null;
+    }
+}
+
+if (! function_exists('toTimeString')) {
+    function toTimeString(?string $date): ?string
+    {
+        return $date ? Carbon::parse($date)->toTimeString() : null;
+    }
+}
+
+if (! function_exists('recursiveClasses')) {
+    /**
+     * Get list of classes in a directory path, with optional inclusion/exclusion filters
+     *
+     * @param  string  $path  Base path to scan for classes
+     * @param  array<string>  $excluding  Classes to exclude from results
+     * @param  array<string>  $including  Classes to include in results
+     * @return array<int,string> Array of class names
+     */
+    function recursiveClasses(string $path = 'App', array $excluding = [], array $including = []): array
+    {
+        $path = app_path($path);
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
+        $classes = [];
+        foreach ($iterator as $file) {
+            if ($file->isFile() && $file->getExtension() === 'php') {
+                $relativePath = str_replace(app_path().'/', '', $file->getPathname());
+                $className = str_replace(['/', '.php'], ['\\', ''], $relativePath);
+                $classes[] = 'App\\'.$className;
+            }
+        }
+
+        // Filter out excluded classes
+        if (! empty($excluding)) {
+            $classes = array_filter($classes, function ($class) use ($excluding) {
+                return ! in_array($class, $excluding);
+            });
+        }
+
+        // Filter to only included classes if specified
+        if (! empty($including)) {
+            $classes = array_filter($classes, function ($class) use ($including) {
+                return in_array($class, $including);
+            });
+        }
+
+        return array_values($classes);
+    }
+}
+
+if (! function_exists('slug')) {
+    function slug(mixed $text = null): ?string
+    {
+        return isset($text) ? Str::slug($text) : null;
+    }
+}
+
+if (! function_exists('anyRoute')) {
+    function anyRoute(mixed $params, string $action, string $method = 'get'): \Illuminate\Routing\Route
+    {
+        return Route::$method($params, $action);
     }
 }
