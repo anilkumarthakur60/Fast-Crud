@@ -269,7 +269,7 @@ if (! function_exists('recursiveDatabaseClasses')) {
      * Recursively scan a directory for PHP files and extract the fully qualified class names.
      *
      * @param  array<string>  $excluding  An array of class names to exclude.
-     * @return array<int,mixed> An array of fully qualified class names.
+     * @return array<int,string> An array of fully qualified class names.
      *
      * */
     function recursiveDatabaseClasses(?string $directory = null, array $excluding = []): array
@@ -284,19 +284,26 @@ if (! function_exists('recursiveDatabaseClasses')) {
         if (! is_dir($basePath)) {
             return $classes;
         }
-
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($basePath));
 
         foreach ($files as $file) {
+            /**
+             * @var RecursiveDirectoryIterator $file
+             */
+            // Check if the current item is a PHP file
             if ($file->isFile() && $file->getExtension() === 'php') {
+                // Get the content of the PHP file
                 $fileContent = file_get_contents($file->getPathname());
 
-                preg_match('/namespace\s+(.+?);/', $fileContent, $namespaceMatch);
-                preg_match('/class\s+([a-zA-Z0-9_]+)/', $fileContent, $classMatch);
+                // Extract the namespace and class name using regular expressions
+                preg_match('/namespace\s+(.+?);/', (string) $fileContent, $namespaceMatch);
+                preg_match('/class\s+([a-zA-Z0-9_]+)/', (string) $fileContent, $classMatch);
 
+                // Assign the namespace and class name, if found
                 $namespace = $namespaceMatch[1] ?? null;
                 $className = $classMatch[1] ?? null;
 
+                // If both namespace and class name are present, add to the classes array
                 if ($namespace && $className) {
                     $classes[] = $namespace.'\\'.$className;
                 }
@@ -309,6 +316,7 @@ if (! function_exists('recursiveDatabaseClasses')) {
 
         return array_values($classes);
     }
+
 }
 
 if (! function_exists('toFormattedDateString')) {
@@ -326,7 +334,7 @@ if (! function_exists('uuid')) {
 }
 
 if (! function_exists('implodeFillable')) {
-    function implodeFillable(mixed $model): string
+    function implodeFillable(string $model): string
     {
         if (is_subclass_of($model, 'Illuminate\Database\Eloquent\Model')) {
             $model = new $model;
@@ -375,6 +383,9 @@ if (! function_exists('recursiveClasses')) {
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
         $classes = [];
         foreach ($iterator as $file) {
+            /**
+             * @var RecursiveDirectoryIterator $file
+             */
             if ($file->isFile() && $file->getExtension() === 'php') {
                 $relativePath = str_replace(app_path().'/', '', $file->getPathname());
                 $className = str_replace(['/', '.php'], ['\\', ''], $relativePath);
@@ -382,14 +393,12 @@ if (! function_exists('recursiveClasses')) {
             }
         }
 
-        // Filter out excluded classes
         if (! empty($excluding)) {
             $classes = array_filter($classes, function ($class) use ($excluding) {
                 return ! in_array($class, $excluding);
             });
         }
 
-        // Filter to only included classes if specified
         if (! empty($including)) {
             $classes = array_filter($classes, function ($class) use ($including) {
                 return in_array($class, $including);
@@ -401,7 +410,7 @@ if (! function_exists('recursiveClasses')) {
 }
 
 if (! function_exists('slug')) {
-    function slug(mixed $text = null): ?string
+    function slug(?string $text = null): ?string
     {
         return isset($text) ? Str::slug($text) : null;
     }
