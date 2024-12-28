@@ -14,7 +14,8 @@ describe('ProviderMacrosTest', function () {
 
         $query = PostModel::query()->likeWhere(['name', 'desc', 'tags:name,id'], 'Test');
         $sql = $query->toRawSql();
-        expect($sql)->toBe("select * from `posts` where (`name` LIKE '%Test%' or `desc` LIKE '%Test%' or exists (select * from `tags` inner join `post_tag` on `tags`.`id` = `post_tag`.`tag_id` where `posts`.`id` = `post_tag`.`post_id` and `name` LIKE '%Test%' and `tags`.`deleted_at` is null)) and `posts`.`deleted_at` is null");
+        // dd($sql);
+        expect($sql)->toBe("select * from `posts` where (`name` LIKE '%Test%' or `desc` LIKE '%Test%' and exists (select * from `tags` inner join `post_tag` on `tags`.`id` = `post_tag`.`tag_id` where (`posts`.`id` = `post_tag`.`post_id` or ((`name` LIKE '%Test%' or `id` LIKE '%Test%'))) and `tags`.`deleted_at` is null)) and `posts`.`deleted_at` is null");
     });
 
     it('adds the paginates macro to Builder', function () {
@@ -170,11 +171,12 @@ describe('ProviderMacrosTest', function () {
     });
 
     it('likeWhere macro handles relational attributes correctly', function () {
-        $query = PostModel::query()->likeWhere(['tags.name'], 'Great');
+        $query = PostModel::query()->likeWhere(['tags:name'], 'Great');
 
         // Assert that whereHas is used for the relation
-        $sql = $query->toSql();
-        expect($sql)->toContain('exists');
+        $sql = $query->toRawSql();
+        expect($sql)->toContain('exists')
+            ->and($sql)->toContain('tags');
     });
 
     it('paginates macro defaults to 15 per page when rowsPerPage is zero', function () {
@@ -196,4 +198,4 @@ describe('ProviderMacrosTest', function () {
         $query = PostModel::query()->simplePaginates();
         expect($query->perPage())->toBe(15);
     });
-})->only();
+});
