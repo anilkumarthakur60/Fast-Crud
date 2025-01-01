@@ -557,19 +557,18 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
-    public function changeStatus(int|string $id): JsonResource|JsonResponse
+    public function changeStatus(int|string $id, string $column = 'status'): JsonResource|JsonResponse
     {
         $model = $this->findModel($id, $this->changeStatusScopes, $this->changeStatusScopeWithValue);
-        $this->validateColumn($model, 'status');
+        $this->validateColumn($model, $column);
 
         try {
             DB::beginTransaction();
             $this->beforeChangeStatusProcess($model);
-
-            if (property_exists($model, 'status')) {
-                $model->update(['status' => $model->status === 1 ? 0 : 1]);
+            if (Schema::hasColumn($model->getTable(), $column)) {
+                $model->update([$column => $model->$column === 1 ? 0 : 1]);
             } else {
-                throw new Exception('Status property does not exist on the model.');
+                throw new Exception('Status column does not exist in the database.');
             }
             $this->afterChangeStatusProcess($model);
             DB::commit();
