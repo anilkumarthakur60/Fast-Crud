@@ -59,7 +59,20 @@ class CrudBaseController extends BaseController
 
     public array $updateScopeWithValue = [];
 
-    public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource)
+    // This is the default permission rules can be override in child class
+    public array $permissionRules = [
+        'view' => ['index', 'show'],
+        'alter' => ['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore'],
+        'delete' =>  ['delete'],
+    ];
+
+    public function __construct(
+        public $model,
+        public $storeRequest,
+        public $updateRequest,
+        public $resource,
+        public $detailResource=null, // if not provided then resource will be used for detail
+    )
     {
         if (!(new $this->model() instanceof Model)) {
             throw new Exception('Model is not instance of Model', Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -71,7 +84,9 @@ class CrudBaseController extends BaseController
         if (!(new $this->updateRequest() instanceof FormRequest)) {
             throw new Exception('UpdateRequest is not instance of FormRequest', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
+        if (!$detailResource) {
+            $this->detailResource = $resource;
+        }
         $constants = new ReflectionClass($this->model);
 
         try {
@@ -80,14 +95,10 @@ class CrudBaseController extends BaseController
             $permissionSlug = null;
         }
         if ($permissionSlug) {
-            $this->middleware('permission:view-'.$this->model::permissionSlug)
-                ->only(['index', 'show']);
-
-            $this->middleware('permission:alter-'.$this->model::permissionSlug)
-                ->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
-
-            $this->middleware('permission:delete-'.$this->model::permissionSlug)
-                ->only(['delete']);
+            foreach ($this->permissionRules as $prefix => $value) {
+                $this->middleware('permission:'.$prefix."-".$permissionSlug)
+                    ->only($value);
+            }
         }
     }
 
@@ -135,7 +146,7 @@ class CrudBaseController extends BaseController
             return $this->error($e->getMessage());
         }
 
-        return $this->resource::make($model);
+        return $this->detailResource::make($model);
     }
 
     public function error(
@@ -175,7 +186,7 @@ class CrudBaseController extends BaseController
             })
             ->findOrFail($id);
 
-        return $this->resource::make($model);
+        return $this->detailResource::make($model);
     }
 
     public function destroy($id)
@@ -294,7 +305,7 @@ class CrudBaseController extends BaseController
             return $this->error($e->getMessage());
         }
 
-        return $this->resource::make($model);
+        return $this->detailResource::make($model);
     }
 
     protected function checkFillable($model, $columns): bool
@@ -340,7 +351,7 @@ class CrudBaseController extends BaseController
             return $this->error($e->getMessage());
         }
 
-        return $this->resource::make($model);
+        return $this->detailResource::make($model);
     }
 
     protected function fillableColumn($model): array
@@ -389,7 +400,7 @@ class CrudBaseController extends BaseController
             return $this->error($e->getMessage());
         }
 
-        return $this->resource::make($model);
+        return $this->detailResource::make($model);
     }
 
     public function restoreTrashed($id)
@@ -427,7 +438,7 @@ class CrudBaseController extends BaseController
             return $this->error($e->getMessage());
         }
 
-        return $this->resource::make($model);
+        return $this->detailResource::make($model);
     }
 
     public function restoreAllTrashed()
