@@ -39,7 +39,7 @@ abstract class TestCase extends OrchestraTestCase
 
         Factory::guessFactoryNamesUsing(
             function (string $modelName): string {
-                return 'Anil\FastApiCrud\\Database\\Factories\\'.class_basename($modelName).'Factory';
+                return 'Anil\FastApiCrud\\Tests\\TestSetup\\Factories\\'.class_basename($modelName).'Factory';
             }
         );
         /** @var Application $app */
@@ -58,7 +58,6 @@ abstract class TestCase extends OrchestraTestCase
         $app['config']->set('permission.guard_name', 'web');
         $this->setUpDatabase();
         $this->setupMiddleware();
-
     }
 
     protected function setUpDatabase(): void
@@ -252,7 +251,7 @@ abstract class TestCase extends OrchestraTestCase
             ->name('tags.destroy');
     }
 
-    //spatie permission
+    // spatie permission
 
     private function userRoutes(Router $router): void
     {

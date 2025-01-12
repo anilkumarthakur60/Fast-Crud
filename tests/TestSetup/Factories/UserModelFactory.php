@@ -1,6 +1,6 @@
 <?php
 
-namespace Anil\FastApiCrud\Database\Factories;
+namespace Anil\FastApiCrud\Tests\TestSetup\Factories;
 
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Database\Eloquent\Factories\Factory;

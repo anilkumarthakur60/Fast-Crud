@@ -13,7 +13,7 @@ class RoleModel extends Model
     use HasDateFilters;
     use HasDeleteEvent;
     use HasReplicatesWithRelation;
-    use HasUuid;
+    // use HasUuid;
 
     protected $table = 'roles';
 

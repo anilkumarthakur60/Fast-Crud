@@ -31,8 +31,7 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Anil\\FastApiCrud\\": "src/",
-      "Anil\\FastApiCrud\\Database\\Factories\\": "database/factories"
+      "Anil\\FastApiCrud\\": "src/"
     },
     "files": [
       "src/Helpers/fastApiCrud.php"
@@ -66,8 +65,8 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "scripts": {
-    "test": "pest",
-    "format": "pint",
-    "analyse": "phpstan analyse"
-}
+    "test": "vendor/bin/pest",
+    "format": "vendor/bin/pint",
+    "analyse": "vendor/bin/phpstan analyse"
+  }
 }
