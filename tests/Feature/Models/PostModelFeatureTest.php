@@ -217,9 +217,9 @@ describe(description: 'test_post_controller', tests: function () {
                 'name' => 'Post 1',
                 'user_id' => $this->user->id,
             ]);
-        $response = test()->deleteJson(uri: "posts/{$post->id}");
+        $response = $this->deleteJson(uri: "posts/{$post->id}");
         $response->assertStatus(status: 204);
-        test()->assertDatabaseHas('posts', [
+        $this->assertDatabaseHas('posts', [
             'name' => 'Post 1',
             'deleted_at' => now(),
         ]);
@@ -266,12 +266,12 @@ describe(description: 'test_post_controller', tests: function () {
             'tag_ids' => $tagIds,
         ]);
         $response->assertStatus(status: 201);
-        test()->assertDatabaseHas(table: 'posts', data: [
+        $this->assertDatabaseHas(table: 'posts', data: [
             ...$post,
             'deleted_at' => null,
         ]);
-        test()->assertDatabaseHas(table: 'post_tag', data: ['post_id' => $response->json('data.id'), 'tag_id' => $tagIds[0]]);
-        test()->assertDatabaseHas(table: 'post_tag', data: ['post_id' => $response->json('data.id'), 'tag_id' => $tagIds[1]]);
-        test()->assertSame(2, PostModel::query()->find(1)->tags()->count());
+        $this->assertDatabaseHas(table: 'post_tag', data: ['post_id' => $response->json('data.id'), 'tag_id' => $tagIds[0]]);
+        $this->assertDatabaseHas(table: 'post_tag', data: ['post_id' => $response->json('data.id'), 'tag_id' => $tagIds[1]]);
+        $this->assertSame(2, PostModel::query()->find(1)->tags()->count());
     });
 });

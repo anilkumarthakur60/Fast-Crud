@@ -7,12 +7,6 @@ function createTag(array $attributes = []): TagModel
     return TagModel::factory()->create($attributes);
 }
 
-function assertTagInDatabase(array $attributes): void
-{
-    // Use a closure to access $this in the context of the test
-    test()->assertDatabaseHas('tags', [...$attributes, 'deleted_at' => null]);
-}
-
 describe('tag_model_api', function () {
     describe('crud_operations', function () {
         it('creates_a_tag', function () {
@@ -26,7 +20,7 @@ describe('tag_model_api', function () {
             $tag = createTag($attributes);
 
             expect($tag->only(['name', 'desc', 'status', 'active']))->toMatchArray($attributes);
-            assertTagInDatabase($attributes);
+            $this->assertDatabaseHas('tags', $attributes);
         });
 
         it('updates_a_tag', function () {
@@ -47,21 +41,21 @@ describe('tag_model_api', function () {
             $tag->update($updatedAttributes);
 
             expect($tag->only(['name', 'desc', 'status', 'active']))->toMatchArray($updatedAttributes);
-            assertTagInDatabase($updatedAttributes);
+            $this->assertDatabaseHas('tags', $updatedAttributes);
         });
 
         it('soft_deletes_a_tag', function () {
             $tag = createTag(['name' => 'Tag 1']);
             $tag->delete();
 
-            test()->assertSoftDeleted('tags', ['id' => $tag->id]);
+            $this->assertSoftDeleted('tags', ['id' => $tag->id]);
         });
 
         it('force_deletes_a_tag', function () {
             $tag = createTag(['name' => 'Tag 1']);
             $tag->forceDelete();
 
-            test()->assertDatabaseMissing('tags', ['id' => $tag->id]);
+            $this->assertDatabaseMissing('tags', ['id' => $tag->id]);
         });
     });
 
@@ -72,7 +66,7 @@ describe('tag_model_api', function () {
                 ['name' => 'Tag 2', 'desc' => 'Tag 2 Description', 'status' => 0, 'active' => 0],
             ]);
 
-            test()->get('tags')
+            $this->get('tags')
                 ->assertOk()
                 ->assertJsonCount(2, 'data')
                 ->assertJsonStructure(['data', 'links', 'meta']);
@@ -82,7 +76,7 @@ describe('tag_model_api', function () {
             createTag(['name' => 'Tag 1', 'status' => 1, 'active' => 1]);
             createTag(['name' => 'Tag 2', 'status' => 0, 'active' => 0]);
 
-            $response = test()->get('tags?filters='.json_encode(['queryFilter' => 'Tag 2']));
+            $response = $this->get('tags?filters=' . json_encode(['queryFilter' => 'Tag 2']));
 
             $response
                 ->assertOk()
@@ -98,16 +92,16 @@ describe('tag_model_api', function () {
                 'active' => 0,
             ];
 
-            test()->postJson('tags', $attributes)
+            $this->postJson('tags', $attributes)
                 ->assertCreated();
 
-            assertTagInDatabase($attributes);
+            $this->assertDatabaseHas('tags', $attributes);
         });
 
         it('validates_tag_name_during_creation', function () {
             $longName = str_repeat('A', 256);
 
-            test()->postJson('tags', ['name' => $longName])
+            $this->postJson('tags', ['name' => $longName])
                 ->assertUnprocessable()
                 ->assertJsonValidationErrors(['name']);
         });
@@ -127,19 +121,19 @@ describe('tag_model_api', function () {
                 'active' => 1,
             ];
 
-            test()->putJson("tags/{$tag->id}", $updatedAttributes)
+            $this->putJson("tags/{$tag->id}", $updatedAttributes)
                 ->assertOk();
 
-            assertTagInDatabase($updatedAttributes);
+            $this->assertDatabaseHas('tags', $updatedAttributes);
         });
 
         it('deletes_a_tag_via_api', function () {
             $tag = createTag(['name' => 'Tag 1']);
 
-            test()->deleteJson("tags/{$tag->id}")
+            $this->deleteJson("tags/{$tag->id}")
                 ->assertNoContent();
 
-            test()->assertSoftDeleted('tags', ['id' => $tag->id]);
+            $this->assertSoftDeleted('tags', ['id' => $tag->id]);
         });
     });
 });
