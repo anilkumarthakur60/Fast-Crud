@@ -76,7 +76,7 @@ describe('tag_model_api', function () {
             createTag(['name' => 'Tag 1', 'status' => 1, 'active' => 1]);
             createTag(['name' => 'Tag 2', 'status' => 0, 'active' => 0]);
 
-            $response = $this->get('tags?filters=' . json_encode(['queryFilter' => 'Tag 2']));
+            $response = $this->get('tags?filters='.json_encode(['queryFilter' => 'Tag 2']));
 
             $response
                 ->assertOk()

@@ -4,7 +4,7 @@ use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 
-describe('ProviderMacrosTest', function () {
+describe('ProviderMacrosFeatureTest', function () {
     it('adds the likeWhere macro to Builder', function () {
 
         //        PostModel::factory(5)->create();
@@ -32,7 +32,6 @@ describe('ProviderMacrosTest', function () {
         request()->merge(['rowsPerPage' => 0]);
         $query = PostModel::query()->paginates();
         expect($query->perPage())->toBe(PostModel::query()->count());
-
     });
 
     it('adds the simplePaginates macro to Builder', function () {
@@ -106,7 +105,6 @@ describe('ProviderMacrosTest', function () {
         expect($orders)->toHaveCount(1)
             ->and($orders[0]['column'])->toBe('name')
             ->and($orders[0]['direction'])->toBe('asc');
-
     });
 
     it('adds the withCountWhereHas macro to Builder', function () {
@@ -118,7 +116,6 @@ describe('ProviderMacrosTest', function () {
         // Assert that the raw SQL matches the expected format
         $sql = $query->toRawSql();
         expect($sql)->toBe("select `posts`.*, (select count(*) from `tags` inner join `post_tag` on `tags`.`id` = `post_tag`.`tag_id` where `posts`.`id` = `post_tag`.`post_id` and `name` like '%test%' and `tags`.`deleted_at` is null) as `tags_count` from `posts` where (select count(*) from `tags` inner join `post_tag` on `tags`.`id` = `post_tag`.`tag_id` where `posts`.`id` = `post_tag`.`post_id` and `name` like '%test%' and `tags`.`deleted_at` is null) >= 2 and `posts`.`deleted_at` is null");
-
     });
     it('adds the paginate macro to Collection', function () {
         PostModel::factory(5)->create();
