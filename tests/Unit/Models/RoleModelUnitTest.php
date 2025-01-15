@@ -9,8 +9,8 @@ use Anil\FastApiCrud\Traits\HasReplicatesWithRelation;
 
 describe('RoleModelUnitTest', function () {
     it('has used traits', function () {
-        expect(class_uses(RoleModel::class))->toContain(HasDateFilters::class);
-        expect(class_uses(RoleModel::class))->toContain(HasDeleteEvent::class);
-        expect(class_uses(RoleModel::class))->toContain(HasReplicatesWithRelation::class);
+        expect(class_uses(RoleModel::class))->toContain(HasDateFilters::class)
+            ->and(class_uses(RoleModel::class))->toContain(HasDeleteEvent::class)
+            ->and(class_uses(RoleModel::class))->toContain(HasReplicatesWithRelation::class);
     });
 });

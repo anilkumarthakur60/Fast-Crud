@@ -12,7 +12,8 @@ describe('ProviderMacrosFeatureTest', function () {
         //        $sql = $query->toRawSql();
         //        expect($sql)->toBe("select * from `posts` where (`name` LIKE '%Test%' or `desc` LIKE '%Test%') and `posts`.`deleted_at` is null");
 
-        $query = PostModel::query()->likeWhere(['name', 'desc', 'tags:name,id'], 'Test');
+        $query = PostModel::query()
+            ->likeWhere(['name', 'desc', 'tags:name,id'], 'Test');
         $sql = $query->toRawSql();
         // dd($sql);
         expect($sql)->toBe("select * from `posts` where (`name` LIKE '%Test%' or `desc` LIKE '%Test%' and exists (select * from `tags` inner join `post_tag` on `tags`.`id` = `post_tag`.`tag_id` where (`posts`.`id` = `post_tag`.`post_id` or ((`name` LIKE '%Test%' or `id` LIKE '%Test%'))) and `tags`.`deleted_at` is null)) and `posts`.`deleted_at` is null");

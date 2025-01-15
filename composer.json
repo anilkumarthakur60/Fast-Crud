@@ -26,7 +26,8 @@
     "larastan/larastan": "^1.0||^2.0||^3.0",
     "laravel/pint": "^1.0",
     "orchestra/testbench": "^7.0||^8.0||^9.0",
-    "pestphp/pest": "^1.0||^2.34"
+    "pestphp/pest": "^1.0||^2.34||^3.0",
+    "pestphp/pest-plugin-type-coverage": "^3.2"
   },
   "license": "MIT",
   "autoload": {
@@ -65,8 +66,9 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "scripts": {
-    "test": "vendor/bin/pest",
-    "format": "vendor/bin/pint",
-    "analyse": "vendor/bin/phpstan analyse"
+    "pest": "vendor/bin/pest --parallel",
+    "pest-coverage": "vendor/bin/pest --coverage",
+    "pest-type": "vendor/bin/pest --type-coverage",
+    "pint": "vendor/bin/pint"
   }
 }

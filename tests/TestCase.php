@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Router;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Spatie\Permission\Models\Permission;
@@ -24,7 +25,8 @@ use Spatie\Permission\PermissionServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
-    use DatabaseMigrations;
+    // use DatabaseMigrations;
+    use RefreshDatabase;
 
     protected Permission $testClientPermission;
 
@@ -62,6 +64,7 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function setUpDatabase(): void
     {
+        $this->artisan('migrate', ['--database' => 'mysql'])->run();
         $this->userMigration();
         $this->tagMigration();
         $this->postMigration();

@@ -11,65 +11,37 @@ describe(description: 'post_model_class_test', tests: function () {
     it(description: 'it_should_have_correct_fillable_attributes', closure: function () {
         $fillableKeys = array_keys($this->postModel->getFillable());
         sort($fillableKeys);
-        $expectedKeys = array_keys([
-            'name',
-            'desc',
-            'user_id',
-            'status',
-            'active',
-        ]);
+        $expectedKeys = array_keys(['name', 'desc', 'user_id', 'status', 'active']);
         sort($expectedKeys);
-        expect($fillableKeys)
-            ->toBeArray()
-            ->and($fillableKeys)
-            ->toBe($expectedKeys);
+        expect($fillableKeys)->toBeArray()->and($fillableKeys)->toBe($expectedKeys);
     });
 
     it(description: 'it_should_have_correct_table_name', closure: function () {
-        expect($this->postModel->getTable())
-            ->toBe('posts');
+        expect($this->postModel->getTable())->toBe('posts');
     });
 
     it(description: 'it_should_have_correct_primary_key', closure: function () {
-        expect($this->postModel->getKeyName())
-            ->toBe('id');
+        expect($this->postModel->getKeyName())->toBe('id');
     });
 
     it(description: 'it_should_have_correct_timestamps', closure: function () {
-        expect($this->postModel->getCreatedAtColumn())
-            ->toBe('created_at')
-            ->and($this->postModel->getUpdatedAtColumn())
-            ->toBe('updated_at');
+        expect($this->postModel->getCreatedAtColumn())->toBe('created_at')->and($this->postModel->getUpdatedAtColumn())->toBe('updated_at');
     });
 
     it(description: 'it_should_have_correct_columns', closure: function () {
         $columns = Schema::getColumnListing($this->postModel->getTable());
         sort($columns);
-        $expectedColumns = [
-            'active',
-            'created_at',
-            'deleted_at',
-            'desc',
-            'id',
-            'name',
-            'status',
-            'updated_at',
-            'user_id',
-        ];
+        $expectedColumns = ['active', 'created_at', 'deleted_at', 'desc', 'id', 'name', 'status', 'updated_at', 'user_id'];
         sort($expectedColumns);
         expect($columns)->toBe($expectedColumns);
     });
 
     it(description: 'should_have_all_the_method_defined_in_the_model', closure: function () {
-        expect(method_exists($this->postModel, 'user'))->toBeTrue()
-            ->and(method_exists($this->postModel, 'tags'))->toBeTrue();
+        expect(method_exists($this->postModel, 'user'))->toBeTrue()->and(method_exists($this->postModel, 'tags'))->toBeTrue();
     });
 
     it(description: 'it_should_have_correct_relationships', closure: function () {
-        expect(method_exists($this->postModel, 'user'))->toBeTrue()
-            ->and(method_exists($this->postModel, 'tags'))->toBeTrue()
-            ->and($this->postModel->user())->toBeInstanceOf(Illuminate\Database\Eloquent\Relations\BelongsTo::class)
-            ->and($this->postModel->tags())->toBeInstanceOf(Illuminate\Database\Eloquent\Relations\BelongsToMany::class);
+        expect(method_exists($this->postModel, 'user'))->toBeTrue()->and(method_exists($this->postModel, 'tags'))->toBeTrue()->and($this->postModel->user())->toBeInstanceOf(Illuminate\Database\Eloquent\Relations\BelongsTo::class)->and($this->postModel->tags())->toBeInstanceOf(Illuminate\Database\Eloquent\Relations\BelongsToMany::class);
     });
 
     it(description: 'it_should_sync_tags_after_create', closure: function () {
@@ -85,7 +57,6 @@ describe(description: 'post_model_class_test', tests: function () {
     });
 
     it(description: 'it_should_return_permission_slug', closure: function () {
-        expect($this->postModel->getPermissionSlug())
-            ->toBe('posts');
+        expect($this->postModel->getPermissionSlug())->toBe('posts');
     });
 });
